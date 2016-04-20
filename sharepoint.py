@@ -3,7 +3,7 @@ import xml.etree.ElementTree as et
 import re
 import getpass
 
-class SPSession:
+class Session:
 	def __init__(self, site):
 		self.site = site
 		self.auth()
