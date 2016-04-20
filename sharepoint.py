@@ -63,3 +63,17 @@ class SPSession:
 
 	def get(self, requestURI):
 		return requests.get(requestURI, headers = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"})
+
+	def getfile(self, requestURI, filename = None):
+		# extract file name from request URI
+		if filename == None:
+			filename = re.search("[^\/]+$", requestURI).group(0)
+		# request file in stream mode
+		response = requests.get(requestURI, headers = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"}, stream = True)
+		# save to output file
+		if response.status_code == requests.codes.ok:
+			with open(filename, "wb") as file:
+				for chunk in response:
+					file.write(chunk)
+			file.close()
+		return response
