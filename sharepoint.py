@@ -51,9 +51,9 @@ class Session:
 		cookie = "; ".join(cookies)
 
 		# verify authorisation by requesting page
-		response = requests.get("https://" + self.site, headers = {"Cookie": cookie})
-		
-		if response.status_code == requests.codes.ok:
+		response = requests.head("https://" + self.site, headers = {"Cookie": cookie})
+
+		if response.status_code == requests.codes.ok or requests.codes.found:
 			self.cookie = cookie
 			self.expire = 0
 			print("Authentication successful\n")
