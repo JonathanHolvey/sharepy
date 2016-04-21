@@ -44,10 +44,8 @@ class Session:
 
 		if response.status_code == requests.codes.ok:
 			self.cookie = cookie
-			self.expire = 0
 			print("Authentication successful\n")
 		else:
-			self.expire = None
 			print("Authentication failed\n")
 
 	def get(self, requestURI):
