@@ -19,6 +19,12 @@ r = s.get("https://example.sharepoint.com/_api/web/lists/GetByName('Test Library
 
 This will return a `requests` object. See the [requests documentation](http://docs.python-requests.org/en/master/) for details. The `get()` method sends an `Accept: application/json; odata=verbose"` header with all requests, so API responses will be formatted as JSON.
 
+Headers can be added or overridden by supplying a dictionary to the `get()` method:
+
+```python
+r = s.get("https://example.sharepoint.com", headers = {"Accept": "application/atom+xml"})
+```
+
 ## Download a file:
 
 ```python

@@ -48,8 +48,10 @@ class Session:
 		else:
 			print("Authentication failed\n")
 
-	def get(self, requestURI):
-		return requests.get(requestURI, headers = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"})
+	def get(self, requestURI, headers = {}):
+		allHeaders = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"}
+		allHeaders.update(headers)
+		return requests.get(requestURI, headers = allHeaders)
 
 	def getfile(self, requestURI, filename = None):
 		# extract file name from request URI
