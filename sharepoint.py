@@ -40,9 +40,9 @@ class Session:
 		cookie = "rtFa=" + response.cookies["rtFa"] + "; FedAuth=" + response.cookies["FedAuth"]
 
 		# verify authorisation by requesting page
-		response = requests.head("https://" + self.site, headers = {"Cookie": cookie})
+		response = requests.get("https://" + self.site, headers = {"Cookie": cookie})
 
-		if response.status_code == requests.codes.ok or requests.codes.found:
+		if response.status_code == requests.codes.ok:
 			self.cookie = cookie
 			self.expire = 0
 			print("Authentication successful\n")
