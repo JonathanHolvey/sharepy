@@ -1,8 +1,9 @@
 import requests
 import xml.etree.ElementTree as et
 import re
-import getpass
+from getpass import getpass
 from datetime import datetime, timedelta
+from copy import copy
 
 class Session:
 	def __init__(self, site):
@@ -11,6 +12,14 @@ class Session:
 
 		if self.auth():
 			self.digest()
+		else:
+			return
+
+		self.requiredHeaders = {
+			"Cookie": self.cookie,
+			"Accept": "application/json; odata=verbose",
+			"Content-type": "application/json;odata=verbose"
+		}
 
 	def auth(self):
 		# load SAML request template
@@ -22,7 +31,7 @@ class Session:
 
 		# insert username and password into SAML request
 		samlRequest = samlRequest.replace("[username]", self.username)
-		samlRequest = samlRequest.replace("[password]", getpass.getpass("Enter your password: "))
+		samlRequest = samlRequest.replace("[password]", getpass("Enter your password: "))
 		samlRequest = samlRequest.replace("[endpoint]", self.site)
 
 		# request STS token from Microsoft Online
@@ -74,21 +83,25 @@ class Session:
 			return True
 
 	def get(self, requestURI, headers = {}):
-		allHeaders = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"}
+		allHeaders = copy(self.requiredHeaders)
 		allHeaders.update(headers)
 		return requests.get(requestURI, headers = allHeaders)
 
 	def post(self, requestURI, data, headers = {}):
-		allHeaders = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose", "Content-type": "application/json;odata=verbose"}
+		self.digest()
+		allHeaders = copy(self.requiredHeaders)
+		allHeaders.update({"Authorization": "Bearer " + self.digestText})
 		allHeaders.update(headers)
 		return requests.post(requestURI, data = data, headers = allHeaders)
 
-	def getfile(self, requestURI, filename = None):
+	def getfile(self, requestURI, filename = None, headers = {}):
 		# extract file name from request URI
-		if filename == None:
+		if filename is None:
 			filename = re.search("[^\/]+$", requestURI).group(0)
 		# request file in stream mode
-		response = requests.get(requestURI, headers = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"}, stream = True)
+		allHeaders = copy(self.requiredHeaders)
+		allHeaders.update(headers)
+		response = requests.get(requestURI, headers = allHeaders, stream = True)
 		# save to output file
 		if response.status_code == requests.codes.ok:
 			with open(filename, "wb") as file:
