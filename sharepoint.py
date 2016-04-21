@@ -36,19 +36,8 @@ class Session:
 		print("Requesting authorisation cookies...")
 		response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0", data = token, headers = {"Host": self.site})
 
-		# parse authorisation cookies from returned headers
-		cookies = []
-		for item in response.headers["Set-Cookie"].split(", "):
-			# trim data from end of cookie
-			match = re.match("(.+?)(?=;)", item).group(1)
-			# save two matching cookies to array
-			if match[0:5] == "rtFa=" or match[0:8] == "FedAuth=":
-				cookies.append(match)
-
-		if len(cookies) != 2:
-			print("Cookie request failed. Check your SharePoint site URL\n")
-
-		cookie = "; ".join(cookies)
+		# create authorisation cookie from returned headers
+		cookie = "rtFa=" + response.cookies["rtFa"] + "; FedAuth=" + response.cookies["FedAuth"]
 
 		# verify authorisation by requesting page
 		response = requests.head("https://" + self.site, headers = {"Cookie": cookie})
