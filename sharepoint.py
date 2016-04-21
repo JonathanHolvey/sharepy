@@ -53,6 +53,11 @@ class Session:
 		allHeaders.update(headers)
 		return requests.get(requestURI, headers = allHeaders)
 
+	def post(self, requestURI, data, headers = {}):
+		allHeaders = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose", "Content-type": "application/json;odata=verbose"}
+		allHeaders.update(headers)
+		return requests.post(requestURI, data = data, headers = allHeaders)
+
 	def getfile(self, requestURI, filename = None):
 		# extract file name from request URI
 		if filename == None:
