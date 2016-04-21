@@ -2,11 +2,15 @@ import requests
 import xml.etree.ElementTree as et
 import re
 import getpass
+from datetime import datetime, timedelta
 
 class Session:
 	def __init__(self, site):
 		self.site = site
-		self.auth()
+		self.digestExpire = datetime.now()
+
+		if self.auth():
+			self.digest()
 
 	def auth(self):
 		# load SAML request template
@@ -45,8 +49,29 @@ class Session:
 		if response.status_code == requests.codes.ok:
 			self.cookie = cookie
 			print("Authentication successful\n")
+			return True
 		else:
 			print("Authentication failed\n")
+
+	# check and refresh site's request form digest - see https://msdn.microsoft.com/en-us/library/office/jj164022.aspx#WritingData
+	def digest(self):
+		# check for expired digest
+		if self.digestExpire <= datetime.now():
+			# request site context info from SharePoint site
+			response = requests.post("https://" + self.site + "/_api/contextinfo", data = "", headers = {"Cookie": self.cookie})
+			# parse digest text and timeout from XML
+			try:
+				root = et.fromstring(response.text)
+				self.digestText = root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestValue").text
+				digestTimeout = int(root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestTimeoutSeconds").text)
+			except:
+				print("Digest request failed.\n")
+				return
+			# calculate digest expiry time
+			self.digestExpire = datetime.now() + timedelta(seconds = digestTimeout)
+			return True
+		else:
+			return True
 
 	def get(self, requestURI, headers = {}):
 		allHeaders = {"Cookie": self.cookie, "Accept": "application/json; odata=verbose"}
