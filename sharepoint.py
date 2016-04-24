@@ -12,14 +12,12 @@ class Session:
 
 		if self.auth():
 			self.digest()
-		else:
-			return
 
-		self.requiredHeaders = {
-			"Cookie": self.cookie,
-			"Accept": "application/json; odata=verbose",
-			"Content-type": "application/json;odata=verbose"
-		}
+			self.requiredHeaders = {
+				"Cookie": self.cookie,
+				"Accept": "application/json; odata=verbose",
+				"Content-type": "application/json; odata=verbose"
+			}
 
 	def auth(self):
 		# load SAML request template
