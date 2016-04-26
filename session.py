@@ -13,6 +13,8 @@ class SharePointSession:
 	def __init__(self, site):
 		self.site = site
 		self.digestExpire = datetime.now()
+		# request credentials from user
+		self.username = input("Enter your username: ")
 
 		if self.auth():
 			self.digest()
@@ -27,9 +29,6 @@ class SharePointSession:
 		# load SAML request template
 		with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
 			samlRequest = file.read().replace(">\s+<", "><")
-
-		# request credentials from user
-		self.username = input("Enter your username: ")
 
 		# insert username and password into SAML request
 		samlRequest = samlRequest.replace("[username]", self.username)
