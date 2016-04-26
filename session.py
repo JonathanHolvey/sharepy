@@ -6,7 +6,10 @@ from getpass import getpass
 from datetime import datetime, timedelta
 from copy import copy
 
-class Session:
+def connect(site):
+	return SharePointSession(site)
+
+class SharePointSession:
 	def __init__(self, site):
 		self.site = site
 		self.digestExpire = datetime.now()
