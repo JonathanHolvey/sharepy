@@ -1,12 +1,12 @@
-# Simple SharePoint authentication for Python
+# SharePy - Simple SharePoint authentication for Python
 
-This library will handle authentication for your sharepoint site, allowing you to make straightforward HTTP requests from Python. The `get()`, `post()` and `getfile()` methods are wrapped around the commonly used `requests` module, meaning that returned objects are familliar, easy to work with and well documented. 
+This module will handle authentication for your sharepoint site, allowing you to make straightforward HTTP requests from Python. The `get()`, `post()` and `getfile()` methods are wrapped around the commonly used `requests` module, meaning that returned objects are familliar, easy to work with and well documented. 
 
 ## Initiate a SharePoint session:
 
 ```python
-import sharepoint as sp
-s = sp.Session("example.sharepoint.com")
+import sharepy as sp
+s = sp.session.connect("example.sharepoint.com")
 ```
 
 You will be prompted to enter your username and password, which are used to request an STS token from Microsoft. An authentication cookie and request digest token are then requested and saved to properties for later use. The digest token will be refreshed automatically as it expires.
