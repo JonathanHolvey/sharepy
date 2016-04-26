@@ -1,6 +1,7 @@
 import requests
 import xml.etree.ElementTree as et
 import re
+import os
 from getpass import getpass
 from datetime import datetime, timedelta
 from copy import copy
@@ -21,7 +22,7 @@ class Session:
 
 	def auth(self):
 		# load SAML request template
-		with open("saml-template.xml", "r") as file:
+		with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
 			samlRequest = file.read().replace(">\s+<", "><")
 
 		# request credentials from user
