@@ -43,6 +43,19 @@ This will download the file to the current directory and return a `requests` obj
 r = s.getfile("https://example.sharepoint.com/Test%20Library/Test%20File.pdf", "downloads/file.pdf")
 ```
 
+## Save and reload your authenticated session
+
+The session object can be saved to a file using the `save()` method, so you don't need to enter credentials every time you run a script. Later, the `load()` function can be used to restore the session:
+
+```python
+s.save()
+```
+```python
+s = sp.session.load()
+```
+
+The default file name for saving and loading sessions is `sp-session.pkl`, however an alternative location can be provided as an argument to `save()` and `load()`.
+
 ## Useful reading
 
 - Constructing SharePoint API calls: [SharePoint REST API documentation](https://msdn.microsoft.com/en-us/library/office/dn292552.aspx)
