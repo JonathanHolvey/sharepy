@@ -2,12 +2,24 @@ import requests
 import xml.etree.ElementTree as et
 import re
 import os
+import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
 from copy import copy
 
 def connect(site):
 	return SharePointSession(site)
+
+# load and return saved session object
+def load(filename = None):
+	filename = filename or "sp-session.pkl"
+	if os.path.isfile(filename):
+		session = pickle.load(open(filename, "rb"))
+		if session.digest():
+			print("Connected to " + session.site + " as " + session.username + "\n")
+			return session
+	else:
+		return False
 
 class SharePointSession:
 	def __init__(self, site):
@@ -63,7 +75,8 @@ class SharePointSession:
 		else:
 			print("Authentication failed\n")
 
-	# check and refresh site's request form digest - see https://msdn.microsoft.com/en-us/library/office/jj164022.aspx#WritingData
+	# check and refresh site's request form digest
+	# see https://msdn.microsoft.com/en-us/library/office/jj164022.aspx#WritingData
 	def digest(self):
 		# check for expired digest
 		if self.digestExpire <= datetime.now():
@@ -82,6 +95,11 @@ class SharePointSession:
 			return True
 		else:
 			return True
+
+	# serialise session object and save to file
+	def save(self, filename = None):
+		filename = filename or "sp-session.pkl"
+		pickle.dump(self, open(filename, "wb"))
 
 	def get(self, requestURI, headers = {}):
 		allHeaders = copy(self.requiredHeaders)
