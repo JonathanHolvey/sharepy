@@ -10,33 +10,33 @@ def connect(site):
 	return SharePointSession(site)
 
 # load and return saved session object
-def load(filename = None):
-	filename = filename or "sp-session.pkl"
-	if os.path.isfile(filename):
-		session = pickle.load(open(filename, "rb"))
-		if session.digest():
-			print("Connected to " + session.site + " as " + session.username + "\n")
-			return session
+def load(filename = "sp-session.pkl"):
+	session = SharePointSession()
+	session.__dict__ = pickle.load(open(filename, "rb"))
+	if session.redigest(True):
+		print("Connected to " + session.site + " as " + session.username + "\n")
+		return session
 	else:
 		return False
 
 class SharePointSession(requests.Session):
-	def __init__(self, site):
-		self.site = site
-		self.expire = datetime.now()
-		# request credentials from user
-		self.username = input("Enter your username: ")
-
+	def __init__(self, site = None):
 		super().__init__()
 
-		if self.spauth():
-			self.redigest()
+		if site is not None:
+			self.site = site
+			self.expire = datetime.now()
+			# request credentials from user
+			self.username = input("Enter your username: ")
 
-			self.headers.update({
-				"Cookie": self.cookie,
-				"Accept": "application/json; odata=verbose",
-				"Content-type": "application/json; odata=verbose"
-			})
+			if self.spauth():
+				self.redigest()
+
+				self.headers.update({
+					"Cookie": self.cookie,
+					"Accept": "application/json; odata=verbose",
+					"Content-type": "application/json; odata=verbose"
+				})
 
 	def spauth(self):
 		# load SAML request template
@@ -97,9 +97,8 @@ class SharePointSession(requests.Session):
 		return self.digest
 
 	# serialise session object and save to file
-	def save(self, filename = None):
-		filename = filename or "sp-session.pkl"
-		pickle.dump(self, open(filename, "wb"))
+	def save(self, filename = "sp-session.pkl"):
+		pickle.dump(self.__dict__, open(filename, "wb"))
 
 	def post(self, url, *args, **kwargs):
 		if "headers" not in kwargs.keys():
