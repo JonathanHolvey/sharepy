@@ -1,6 +1,6 @@
 # SharePy - Simple SharePoint authentication for Python
 
-This module will handle authentication for your sharepoint site, allowing you to make straightforward HTTP requests from Python. The `get()`, `post()` and `getfile()` methods are wrapped around the commonly used `requests` module, meaning that returned objects are familliar, easy to work with and well documented. 
+This module will handle authentication for your sharepoint site, allowing you to make straightforward HTTP requests from Python. It extends the commonly used *Requests* module, meaning that returned objects are familliar, easy to work with and well documented. 
 
 ## Initiate a SharePoint session:
 
@@ -17,19 +17,15 @@ You will be prompted to enter your username and password, which are used to requ
 r = s.get("https://example.sharepoint.com/_api/web/lists/GetByTitle('Test Library')")
 ```
 
-This will return a `requests` object. See the [requests documentation](http://docs.python-requests.org/en/master/) for details. The `get()` and `post()` methods send an `Accept: application/json; odata=verbose` header with all requests, so API responses will be formatted as JSON.
+This will return a *Requests* `response` object. See the [requests documentation](http://docs.python-requests.org/en/master/) for details. By default, the headers `Accept: application/json; odata=verbose` and `Content-type: application/json; odata=verbose` are sent with all requests, so API responses will be formatted as JSON where available.
 
-Headers can be added or overridden by supplying a dictionary to the `get()` method:
+Headers can be added or overridden by supplying a dictionary to the relevant method:
 
 ```python
 r = s.get("https://example.sharepoint.com/_api/...", headers = {"Accept": "application/atom+xml"})
 ```
 
-Additionally, POST requests can made by specifying the `data` attribute in the `post()` method:
-
-```python
-r = s.post("https://example.sharepoint.com/_api/...", data = "{'Title': 'New test item'}")
-```
+Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects. In the future this will be expanded to the full range of HTTP verbs, as required by the SharePoint web API.
 
 ## Download a file:
 
@@ -37,7 +33,7 @@ r = s.post("https://example.sharepoint.com/_api/...", data = "{'Title': 'New tes
 r = s.getfile("https://example.sharepoint.com/Test%20Library/Test%20File.pdf")
 ```
 
-This will download the file to the current directory and return a `requests` object. Alternatively you can specify a location to save the file to:
+This will download the file to the current directory and return a `response` object. Alternatively you can specify a location to save the file to:
 
 ```python
 r = s.getfile("https://example.sharepoint.com/Test%20Library/Test%20File.pdf", "downloads/file.pdf")
@@ -45,7 +41,7 @@ r = s.getfile("https://example.sharepoint.com/Test%20Library/Test%20File.pdf", "
 
 ## Save and reload your authenticated session
 
-The session object can be saved to a file using the `save()` method, so you don't need to enter credentials every time you run a script. Later, the `load()` function can be used to restore the session:
+Properties of the authentication session can be saved to a file using the `save()` method, so the same cookies can be reused multiple times. Later, the `load()` function can be used to restore the session:
 
 ```python
 s.save()
