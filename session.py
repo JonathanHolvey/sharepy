@@ -111,7 +111,7 @@ class SharePointSession(requests.Session):
 	def getfile(self, url, filename = None):
 		# extract file name from request URI
 		if filename is None:
-			filename = re.search("[^\/]+$", requestURI).group(0)
+			filename = re.search("[^\/]+$", url).group(0)
 		# request file in stream mode
 		response = self.get(url, stream = True)
 		# save to output file
