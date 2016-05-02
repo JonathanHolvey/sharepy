@@ -5,7 +5,6 @@ import os
 import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
-from copy import copy
 
 def connect(site):
 	return SharePointSession(site)
@@ -21,23 +20,25 @@ def load(filename = None):
 	else:
 		return False
 
-class SharePointSession:
+class SharePointSession(requests.Session):
 	def __init__(self, site):
 		self.site = site
-		self.digestExpire = datetime.now()
+		self.expire = datetime.now()
 		# request credentials from user
 		self.username = input("Enter your username: ")
 
-		if self.auth():
-			self.digest()
+		super().__init__()
 
-			self.requiredHeaders = {
+		if self.spauth():
+			self.redigest()
+
+			self.headers.update({
 				"Cookie": self.cookie,
 				"Accept": "application/json; odata=verbose",
 				"Content-type": "application/json; odata=verbose"
-			}
+			})
 
-	def auth(self):
+	def spauth(self):
 		# load SAML request template
 		with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
 			samlRequest = file.read().replace(">\s+<", "><")
@@ -77,50 +78,43 @@ class SharePointSession:
 
 	# check and refresh site's request form digest
 	# see https://msdn.microsoft.com/en-us/library/office/jj164022.aspx#WritingData
-	def digest(self):
+	def redigest(self, force = False):
 		# check for expired digest
-		if self.digestExpire <= datetime.now():
+		if self.expire <= datetime.now() or force:
 			# request site context info from SharePoint site
 			response = requests.post("https://" + self.site + "/_api/contextinfo", data = "", headers = {"Cookie": self.cookie})
 			# parse digest text and timeout from XML
 			try:
 				root = et.fromstring(response.text)
-				self.digestText = root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestValue").text
-				digestTimeout = int(root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestTimeoutSeconds").text)
+				self.digest = root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestValue").text
+				timeout = int(root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestTimeoutSeconds").text)
 			except:
 				print("Digest request failed.\n")
 				return
 			# calculate digest expiry time
-			self.digestExpire = datetime.now() + timedelta(seconds = digestTimeout)
-			return True
-		else:
-			return True
+			self.expire = datetime.now() + timedelta(seconds = timeout)
+
+		return self.digest
 
 	# serialise session object and save to file
 	def save(self, filename = None):
 		filename = filename or "sp-session.pkl"
 		pickle.dump(self, open(filename, "wb"))
 
-	def get(self, requestURI, headers = {}):
-		allHeaders = copy(self.requiredHeaders)
-		allHeaders.update(headers)
-		return requests.get(requestURI, headers = allHeaders)
+	def post(self, url, *args, **kwargs):
+		if "headers" not in kwargs.keys():
+			kwargs["headers"] = {}
+		kwargs["headers"]["Authorization"] = "Bearer " + self.redigest()
+		print(kwargs)
 
-	def post(self, requestURI, data, headers = {}):
-		self.digest()
-		allHeaders = copy(self.requiredHeaders)
-		allHeaders.update({"Authorization": "Bearer " + self.digestText})
-		allHeaders.update(headers)
-		return requests.post(requestURI, data = data, headers = allHeaders)
+		return super().post(url, *args, **kwargs)
 
-	def getfile(self, requestURI, filename = None, headers = {}):
+	def getfile(self, url, filename = None):
 		# extract file name from request URI
 		if filename is None:
 			filename = re.search("[^\/]+$", requestURI).group(0)
 		# request file in stream mode
-		allHeaders = copy(self.requiredHeaders)
-		allHeaders.update(headers)
-		response = requests.get(requestURI, headers = allHeaders, stream = True)
+		response = self.get(url, stream = True)
 		# save to output file
 		if response.status_code == requests.codes.ok:
 			with open(filename, "wb") as file:
