@@ -104,7 +104,6 @@ class SharePointSession(requests.Session):
 		if "headers" not in kwargs.keys():
 			kwargs["headers"] = {}
 		kwargs["headers"]["Authorization"] = "Bearer " + self.redigest()
-		print(kwargs)
 
 		return super().post(url, *args, **kwargs)
 
