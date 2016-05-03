@@ -30,13 +30,13 @@ Currently only the `post()` method will send a digest header, allowing modificat
 ## Download a file:
 
 ```python
-r = s.getfile("https://example.sharepoint.com/Test%20Library/Test%20File.pdf")
+r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf")
 ```
 
 This will download the file to the current directory and return a `response` object. Alternatively you can specify a location to save the file to:
 
 ```python
-r = s.getfile("https://example.sharepoint.com/Test%20Library/Test%20File.pdf", "downloads/file.pdf")
+r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf", filename = "downloads/file.pdf")
 ```
 
 ## Save and reload your authenticated session
