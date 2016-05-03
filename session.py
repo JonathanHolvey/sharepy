@@ -108,12 +108,12 @@ class SharePointSession(requests.Session):
 
 		return super().post(url, *args, **kwargs)
 
-	def getfile(self, url, filename = None):
-		# extract file name from request URI
-		if filename is None:
-			filename = re.search("[^\/]+$", url).group(0)
+	def getfile(self, url, *args, **kwargs):
+		# extract file name from request URL
+		filename = kwargs.pop("filename", re.search("[^\/]+$", url).group(0))
+		kwargs["stream"] = True
 		# request file in stream mode
-		response = self.get(url, stream = True)
+		response = self.get(url, *args, **kwargs)
 		# save to output file
 		if response.status_code == requests.codes.ok:
 			with open(filename, "wb") as file:
