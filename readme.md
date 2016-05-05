@@ -1,6 +1,6 @@
-# SharePy - Simple SharePoint authentication for Python
+# SharePy - Simple SharePoint Online authentication for Python
 
-This module will handle authentication for your sharepoint site, allowing you to make straightforward HTTP requests from Python. It extends the commonly used *Requests* module, meaning that returned objects are familliar, easy to work with and well documented. 
+This module will handle authentication for your SharePoint Online/O365 site, allowing you to make straightforward HTTP requests from Python. It extends the commonly used *Requests* module, meaning that returned objects are familliar, easy to work with and well documented. 
 
 ## Initiate a SharePoint session:
 
