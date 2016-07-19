@@ -22,7 +22,7 @@ This will return a *Requests* `response` object. See the [requests documentation
 Headers can be added or overridden by supplying a dictionary to the relevant method:
 
 ```python
-r = s.get("https://example.sharepoint.com/_api/...", headers = {"Accept": "application/atom+xml"})
+r = s.get("https://example.sharepoint.com/_api/...", headers={"Accept": "application/atom+xml"})
 ```
 
 Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects. In the future this will be expanded to the full range of HTTP verbs, as required by the SharePoint web API.
@@ -36,7 +36,7 @@ r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf")
 This will download the file to the current directory and return a `response` object. Alternatively you can specify a location to save the file to:
 
 ```python
-r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf", filename = "downloads/file.pdf")
+r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf", filename="downloads/file.pdf")
 ```
 
 ## Save and reload your authenticated session

@@ -10,7 +10,7 @@ def connect(site):
 	return SharePointSession(site)
 
 # load and return saved session object
-def load(filename = "sp-session.pkl"):
+def load(filename="sp-session.pkl"):
 	session = SharePointSession()
 	session.__dict__ = pickle.load(open(filename, "rb"))
 	if session.redigest(True):
@@ -20,7 +20,7 @@ def load(filename = "sp-session.pkl"):
 		return False
 
 class SharePointSession(requests.Session):
-	def __init__(self, site = None):
+	def __init__(self, site=None):
 		super().__init__()
 
 		if site is not None:
@@ -50,7 +50,7 @@ class SharePointSession(requests.Session):
 
 		# request STS token from Microsoft Online
 		print("Requesting STS token...")
-		response = requests.post("https://login.microsoftonline.com/extSTS.srf", data = samlRequest)
+		response = requests.post("https://login.microsoftonline.com/extSTS.srf", data=samlRequest)
 		# parse and extract token from returned XML
 		try:
 			root = et.fromstring(response.text)
@@ -61,13 +61,13 @@ class SharePointSession(requests.Session):
 
 		# request authorisation from sharepoint site
 		print("Requesting authorisation cookies...")
-		response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0", data = token, headers = {"Host": self.site})
+		response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0", data=token, headers={"Host": self.site})
 
 		# create authorisation cookie from returned headers
 		cookie = "rtFa=" + response.cookies["rtFa"] + "; FedAuth=" + response.cookies["FedAuth"]
 
 		# verify authorisation by requesting page
-		response = requests.get("https://" + self.site, headers = {"Cookie": cookie})
+		response = requests.get("https://" + self.site, headers={"Cookie": cookie})
 
 		if response.status_code == requests.codes.ok:
 			self.cookie = cookie
@@ -78,11 +78,11 @@ class SharePointSession(requests.Session):
 
 	# check and refresh site's request form digest
 	# see https://msdn.microsoft.com/en-us/library/office/jj164022.aspx#WritingData
-	def redigest(self, force = False):
+	def redigest(self, force=False):
 		# check for expired digest
 		if self.expire <= datetime.now() or force:
 			# request site context info from SharePoint site
-			response = requests.post("https://" + self.site + "/_api/contextinfo", data = "", headers = {"Cookie": self.cookie})
+			response = requests.post("https://" + self.site + "/_api/contextinfo", data="", headers={"Cookie": self.cookie})
 			# parse digest text and timeout from XML
 			try:
 				root = et.fromstring(response.text)
@@ -92,12 +92,12 @@ class SharePointSession(requests.Session):
 				print("Digest request failed.\n")
 				return
 			# calculate digest expiry time
-			self.expire = datetime.now() + timedelta(seconds = timeout)
+			self.expire = datetime.now() + timedelta(seconds=timeout)
 
 		return self.digest
 
 	# serialise session object and save to file
-	def save(self, filename = "sp-session.pkl"):
+	def save(self, filename="sp-session.pkl"):
 		pickle.dump(self.__dict__, open(filename, "wb"))
 
 	def post(self, url, *args, **kwargs):
