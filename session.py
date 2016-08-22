@@ -41,7 +41,7 @@ class SharePointSession(requests.Session):
     def spauth(self):
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
-            saml = file.read().replace(">\s+<", "><")
+            saml = file.read()
 
         # Insert username and password into SAML request
         saml = saml.format(username=self.username, password=getpass("Enter your password: "), site=self.site)
