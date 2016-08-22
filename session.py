@@ -24,7 +24,7 @@ class SharePointSession(requests.Session):
         super().__init__()
 
         if site is not None:
-            self.site = site
+            self.site = re.sub(r"^https?://", "", site)
             self.expire = datetime.now()
             # Request credentials from user
             self.username = input("Enter your username: ")
