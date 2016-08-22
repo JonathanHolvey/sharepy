@@ -15,6 +15,8 @@ def load(filename="sp-session.pkl"):
     session.__dict__ = pickle.load(open(filename, "rb"))
     if session.redigest(True):
         print("Connected to " + session.site + " as " + session.username + "\n")
+        # Re-save session to prevent it going stale
+        session.save(filename)
         return session
     else:
         return False
