@@ -10,8 +10,8 @@
     <o:Security s:mustUnderstand="1"
        xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
       <o:UsernameToken>
-        <o:Username>[username]</o:Username>
-        <o:Password>[password]</o:Password>
+        <o:Username>{username}</o:Username>
+        <o:Password>{password}</o:Password>
       </o:UsernameToken>
     </o:Security>
   </s:Header>
@@ -19,7 +19,7 @@
     <t:RequestSecurityToken xmlns:t="http://schemas.xmlsoap.org/ws/2005/02/trust">
       <wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy">
         <a:EndpointReference>
-          <a:Address>[endpoint]</a:Address>
+          <a:Address>{site}</a:Address>
         </a:EndpointReference>
       </wsp:AppliesTo>
       <t:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</t:KeyType>

@@ -44,9 +44,7 @@ class SharePointSession(requests.Session):
 			samlRequest = file.read().replace(">\s+<", "><")
 
 		# insert username and password into SAML request
-		samlRequest = samlRequest.replace("[username]", self.username)
-		samlRequest = samlRequest.replace("[password]", getpass("Enter your password: "))
-		samlRequest = samlRequest.replace("[endpoint]", self.site)
+		samlRequest = samlRequest.format(username=self.username, password=getpass("Enter your password: "), site=self.site)
 
 		# request STS token from Microsoft Online
 		print("Requesting STS token...")
