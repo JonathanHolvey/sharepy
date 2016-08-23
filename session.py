@@ -6,8 +6,10 @@ import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
 
+
 def connect(site):
     return SharePointSession(site)
+
 
 # Load and return saved session object
 def load(filename="sp-session.pkl"):
@@ -20,6 +22,7 @@ def load(filename="sp-session.pkl"):
         return session
     else:
         return False
+
 
 class SharePointSession(requests.Session):
     def __init__(self, site=None):
