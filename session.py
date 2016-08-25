@@ -101,7 +101,8 @@ class SharePointSession(requests.Session):
 
     # Serialise session object and save to file
     def save(self, filename="sp-session.pkl"):
-        pickle.dump(self.__dict__, open(filename, "wb"))
+        mode = "r+b" if os.path.isfile(filename) else "wb"
+        pickle.dump(self.__dict__, open(filename, mode))
 
     def post(self, url, *args, **kwargs):
         if "headers" not in kwargs.keys():
