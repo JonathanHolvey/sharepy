@@ -21,7 +21,8 @@ def load(filename="sp-session.pkl"):
         session.save(filename)
         return session
     else:
-        return False
+        # Re-authenticate if session is stale
+        return session.spauth()
 
 
 class SharePointSession(requests.Session):
