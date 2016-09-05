@@ -15,14 +15,11 @@ def connect(site):
 def load(filename="sp-session.pkl"):
     session = SharePointSession()
     session.__dict__ = pickle.load(open(filename, "rb"))
-    if session.redigest(True):
+    if session.redigest(True) or session.spauth():
         print("Connected to " + session.site + " as " + session.username + "\n")
         # Re-save session to prevent it going stale
         session.save(filename)
         return session
-    else:
-        # Re-authenticate if session is stale
-        return session.spauth()
 
 
 class SharePointSession(requests.Session):
