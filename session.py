@@ -6,6 +6,12 @@ import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
 
+# XML name space URLs
+xmlns = {
+    "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+    "d": "http://schemas.microsoft.com/ado/2007/08/dataservices"
+}
+
 
 def connect(site):
     return SharePointSession(site)
@@ -15,8 +21,8 @@ def connect(site):
 def load(filename="sp-session.pkl"):
     session = SharePointSession()
     session.__dict__ = pickle.load(open(filename, "rb"))
-    if session.redigest(True) or session.spauth():
-        print("Connected to " + session.site + " as " + session.username + "\n")
+    if session.redigest(force=True) or session.spauth():
+        print("Connected to {} as {}\n".format(session.site, session.username))
         # Re-save session to prevent it going stale
         session.save(filename)
         return session
@@ -47,7 +53,9 @@ class SharePointSession(requests.Session):
             saml = file.read()
 
         # Insert username and password into SAML request
-        saml = saml.format(username=self.username, password=getpass("Enter your password: "), site=self.site)
+        saml = saml.format(username=self.username,
+                           password=getpass("Enter your password: "),
+                           site=self.site)
 
         # Request STS token from Microsoft Online
         print("Requesting STS token...")
@@ -55,14 +63,15 @@ class SharePointSession(requests.Session):
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-            token = root.find(".//{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd}BinarySecurityToken").text
+            token = root.find(".//{" + xmlns["wsse"] + "}BinarySecurityToken").text
         except:
             print("Token request failed. Check your username and password\n")
             return
 
         # Request authorisation from sharepoint site
         print("Requesting authorisation cookies...")
-        response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0", data=token, headers={"Host": self.site})
+        response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
+                                 data=token, headers={"Host": self.site})
 
         # Create authorisation cookie from returned headers
         cookie = "rtFa=" + response.cookies["rtFa"] + "; FedAuth=" + response.cookies["FedAuth"]
@@ -83,12 +92,13 @@ class SharePointSession(requests.Session):
         # Check for expired digest
         if self.expire <= datetime.now() or force:
             # Request site context info from SharePoint site
-            response = requests.post("https://" + self.site + "/_api/contextinfo", data="", headers={"Cookie": self.cookie})
+            response = requests.post("https://" + self.site + "/_api/contextinfo",
+                                     data="", headers={"Cookie": self.cookie})
             # Parse digest text and timeout from XML
             try:
                 root = et.fromstring(response.text)
-                self.digest = root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestValue").text
-                timeout = int(root.find(".//{http://schemas.microsoft.com/ado/2007/08/dataservices}FormDigestTimeoutSeconds").text)
+                self.digest = root.find(".//{" + xmlns["d"] + "}FormDigestValue").text
+                timeout = int(root.find(".//{" + xmlns["d"] + "}FormDigestTimeoutSeconds").text)
             except:
                 print("Digest request failed.\n")
                 return
