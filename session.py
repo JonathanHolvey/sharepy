@@ -6,7 +6,7 @@ import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
 
-# XML name space URLs
+# XML namespace URLs
 xmlns = {
     "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices"
@@ -57,8 +57,8 @@ class SharePointSession(requests.Session):
                            password=getpass("Enter your password: "),
                            site=self.site)
 
-        # Request STS token from Microsoft Online
-        print("Requesting STS token...")
+        # Request security token from Microsoft Online
+        print("Requesting security token...")
         response = requests.post("https://login.microsoftonline.com/extSTS.srf", data=saml)
         # Parse and extract token from returned XML
         try:
@@ -68,15 +68,15 @@ class SharePointSession(requests.Session):
             print("Token request failed. Check your username and password\n")
             return
 
-        # Request authorisation from sharepoint site
-        print("Requesting authorisation cookies...")
+        # Request access token from sharepoint site
+        print("Requesting access cookie...")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
                                  data=token, headers={"Host": self.site})
 
-        # Create authorisation cookie from returned headers
+        # Create access cookie from returned headers
         cookie = "rtFa=" + response.cookies["rtFa"] + "; FedAuth=" + response.cookies["FedAuth"]
 
-        # Verify authorisation by requesting page
+        # Verify access by requesting page
         response = requests.get("https://" + self.site, headers={"Cookie": cookie})
 
         if response.status_code == requests.codes.ok:
@@ -87,7 +87,6 @@ class SharePointSession(requests.Session):
             print("Authentication failed\n")
 
     # Check and refresh site's request form digest
-    # See https://msdn.microsoft.com/en-us/library/office/jj164022.aspx#WritingData
     def redigest(self, force=False):
         # Check for expired digest
         if self.expire <= datetime.now() or force:
@@ -100,7 +99,7 @@ class SharePointSession(requests.Session):
                 self.digest = root.find(".//{" + xmlns["d"] + "}FormDigestValue").text
                 timeout = int(root.find(".//{" + xmlns["d"] + "}FormDigestTimeoutSeconds").text)
             except:
-                print("Digest request failed.\n")
+                print("Digest request failed")
                 return
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
@@ -120,7 +119,7 @@ class SharePointSession(requests.Session):
         return super().post(url, *args, **kwargs)
 
     def getfile(self, url, *args, **kwargs):
-        # Extract file name from request URL
+        # Extract file name from request URL if not provided as keyword argument
         filename = kwargs.pop("filename", re.search("[^\/]+$", url).group(0))
         kwargs["stream"] = True
         # Request file in stream mode
