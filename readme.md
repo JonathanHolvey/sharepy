@@ -5,11 +5,11 @@ This module will handle authentication for your SharePoint Online/O365 site, all
 ## Initiate a SharePoint session:
 
 ```python
-import sharepy as sp
-s = sp.session.connect("example.sharepoint.com")
+import sharepy
+s = sharepy.connect("example.sharepoint.com")
 ```
 
-You will be prompted to enter your username and password, which are used to request an STS token from Microsoft. An authentication cookie and request digest token are then requested and saved to properties for later use. The digest token will be refreshed automatically as it expires.
+You will be prompted to enter your username and password, which are used to request a security token from Microsoft. An access cookie and request digest token are then retrieved and saved to properties for later use. The digest token will be refreshed automatically as it expires.
 
 ## Make an API call:
 
@@ -25,7 +25,7 @@ Headers can be added or overridden by supplying a dictionary to the relevant met
 r = s.get("https://example.sharepoint.com/_api/...", headers={"Accept": "application/atom+xml"})
 ```
 
-Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects. In the future this will be expanded to the full range of HTTP verbs, as required by the SharePoint web API.
+Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects.
 
 ## Download a file:
 
@@ -47,7 +47,7 @@ Properties of the authentication session can be saved to a file using the `save(
 s.save()
 ```
 ```python
-s = sp.session.load()
+s = sharepy.load()
 ```
 
 The default file name for saving and loading sessions is `sp-session.pkl`, however an alternative location can be provided as an argument to `save()` and `load()`.
