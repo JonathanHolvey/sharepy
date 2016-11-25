@@ -42,7 +42,6 @@ class SharePointSession(requests.Session):
                 self.redigest()
 
                 self.headers.update({
-                    "Cookie": self.cookie,
                     "Accept": "application/json; odata=verbose",
                     "Content-type": "application/json; odata=verbose"
                 })
@@ -74,13 +73,12 @@ class SharePointSession(requests.Session):
                                  data=token, headers={"Host": self.site})
 
         # Create access cookie from returned headers
-        cookie = "rtFa=" + response.cookies["rtFa"] + "; FedAuth=" + response.cookies["FedAuth"]
-
+        cookie = self._buildcookie(response.cookies)
         # Verify access by requesting page
-        response = requests.get("https://" + self.site, headers={"Cookie": cookie})
+        response = requests.get("https://" + self.site + "/_api/web", headers={"Cookie": cookie})
 
         if response.status_code == requests.codes.ok:
-            self.cookie = cookie
+            self.headers.update({"Cookie": cookie})
             print("Authentication successful\n")
             return True
         else:
@@ -98,6 +96,7 @@ class SharePointSession(requests.Session):
                 root = et.fromstring(response.text)
                 self.digest = root.find(".//{" + xmlns["d"] + "}FormDigestValue").text
                 timeout = int(root.find(".//{" + xmlns["d"] + "}FormDigestTimeoutSeconds").text)
+                self.headers.update({"Cookie": self._buildcookie(response.cookies)})
             except:
                 print("Digest request failed")
                 return
@@ -131,3 +130,7 @@ class SharePointSession(requests.Session):
                     file.write(chunk)
             file.close()
         return response
+
+    # Create session cookie from response cookie dictionary
+    def _buildcookie(self, cookies):
+        return "rtFa=" + cookies["rtFa"] + "; FedAuth=" + cookies["FedAuth"]
