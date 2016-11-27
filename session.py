@@ -79,6 +79,7 @@ class SharePointSession(requests.Session):
 
         if response.status_code == requests.codes.ok:
             self.headers.update({"Cookie": cookie})
+            self.cookie = cookie
             print("Authentication successful\n")
             return True
         else:
