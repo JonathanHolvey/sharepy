@@ -37,6 +37,7 @@ class SharePointSession(requests.Session):
             self.expire = datetime.now()
             # Request credentials from user
             self.username = input("Enter your username: ")
+            self.password = None
 
             if self.spauth():
                 self.redigest()
@@ -52,8 +53,9 @@ class SharePointSession(requests.Session):
             saml = file.read()
 
         # Insert username and password into SAML request
+        password = self.password or getpass("Enter your password: ")
         saml = saml.format(username=self.username,
-                           password=getpass("Enter your password: "),
+                           password=password,
                            site=self.site)
 
         # Request security token from Microsoft Online
