@@ -24,7 +24,10 @@ def load(filename="sp-session.pkl"):
     if session.redigest(force=True) or session.spauth():
         print("Connected to {} as {}\n".format(session.site, session.username))
         # Re-save session to prevent it going stale
-        session.save(filename)
+        try:
+            session.save(filename)
+        except:
+            pass
         return session
 
 
