@@ -20,7 +20,7 @@ def connect(site):
 # Load and return saved session object
 def load(filename="sp-session.pkl"):
     session = SharePointSession()
-    session.__dict__ = pickle.load(open(filename, "rb"))
+    session.__dict__.update(pickle.load(open(filename, "rb")))
     if session.redigest(force=True) or session.spauth():
         print("Connected to {} as {}\n".format(session.site, session.username))
         # Re-save session to prevent it going stale
@@ -34,17 +34,16 @@ def load(filename="sp-session.pkl"):
 class SharePointSession(requests.Session):
     def __init__(self, site=None):
         super().__init__()
+        self.password = None
 
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
             self.expire = datetime.now()
             # Request credentials from user
             self.username = input("Enter your username: ")
-            self.password = None
 
             if self.spauth():
                 self.redigest()
-
                 self.headers.update({
                     "Accept": "application/json; odata=verbose",
                     "Content-type": "application/json; odata=verbose"
