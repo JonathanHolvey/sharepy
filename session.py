@@ -21,7 +21,7 @@ def connect(site):
 def load(filename="sp-session.pkl"):
     session = SharePointSession()
     session.__dict__.update(pickle.load(open(filename, "rb")))
-    if session.redigest(force=True) or session.spauth():
+    if session.redigest() or session.spauth():
         print("Connected to {} as {}\n".format(session.site, session.username))
         # Re-save session to prevent it going stale
         try:
@@ -90,9 +90,9 @@ class SharePointSession(requests.Session):
             print("Authentication failed\n")
 
     # Check and refresh site's request form digest
-    def redigest(self, force=False):
+    def redigest(self):
         # Check for expired digest
-        if self.expire <= datetime.now() or force:
+        if self.expire <= datetime.now():
             # Request site context info from SharePoint site
             response = requests.post("https://" + self.site + "/_api/contextinfo",
                                      data="", headers={"Cookie": self.cookie})
