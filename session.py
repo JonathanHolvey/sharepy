@@ -21,7 +21,7 @@ def connect(site):
 def load(filename="sp-session.pkl"):
     session = SharePointSession()
     session.__dict__.update(pickle.load(open(filename, "rb")))
-    if session.redigest() or session.spauth():
+    if session._redigest() or session._spauth():
         print("Connected to {} as {}\n".format(session.site, session.username))
         # Re-save session to prevent it going stale
         try:
@@ -42,14 +42,14 @@ class SharePointSession(requests.Session):
             # Request credentials from user
             self.username = input("Enter your username: ")
 
-            if self.spauth():
-                self.redigest()
+            if self._spauth():
+                self._redigest()
                 self.headers.update({
                     "Accept": "application/json; odata=verbose",
                     "Content-type": "application/json; odata=verbose"
                 })
 
-    def spauth(self):
+    def _spauth(self):
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
             saml = file.read()
@@ -90,7 +90,7 @@ class SharePointSession(requests.Session):
             print("Authentication failed\n")
 
     # Check and refresh site's request form digest
-    def redigest(self):
+    def _redigest(self):
         # Check for expired digest
         if self.expire <= datetime.now():
             # Request site context info from SharePoint site
@@ -118,7 +118,7 @@ class SharePointSession(requests.Session):
     def post(self, url, *args, **kwargs):
         if "headers" not in kwargs.keys():
             kwargs["headers"] = {}
-        kwargs["headers"]["Authorization"] = "Bearer " + self.redigest()
+        kwargs["headers"]["Authorization"] = "Bearer " + self._redigest()
 
         return super().post(url, *args, **kwargs)
 
