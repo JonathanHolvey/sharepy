@@ -7,7 +7,7 @@ from getpass import getpass
 from datetime import datetime, timedelta
 
 # XML namespace URLs
-xmlns = {
+ns = {
     "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices"
 }
@@ -66,7 +66,7 @@ class SharePointSession(requests.Session):
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-            token = root.find(".//{" + xmlns["wsse"] + "}BinarySecurityToken").text
+            token = root.find(".//wsse:BinarySecurityToken", ns).text
         except:
             print("Token request failed. Check your username and password\n")
             return
@@ -99,8 +99,8 @@ class SharePointSession(requests.Session):
             # Parse digest text and timeout from XML
             try:
                 root = et.fromstring(response.text)
-                self.digest = root.find(".//{" + xmlns["d"] + "}FormDigestValue").text
-                timeout = int(root.find(".//{" + xmlns["d"] + "}FormDigestTimeoutSeconds").text)
+                self.digest = root.find(".//d:FormDigestValue", ns).text
+                timeout = int(root.find(".//d:FormDigestTimeoutSeconds", ns).text)
                 self.headers.update({"Cookie": self._buildcookie(response.cookies)})
             except:
                 print("Digest request failed")
