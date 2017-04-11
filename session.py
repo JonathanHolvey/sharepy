@@ -1,11 +1,19 @@
+from __future__ import print_function
 import os
 import re
-import requests
 import xml.etree.ElementTree as et
 import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
+
+import requests
+
+# Python 2.7 compatibility
+try:
+    input = raw_input
+except NameError:
+    pass
 
 # XML namespace URLs
 ns = {
@@ -48,7 +56,7 @@ class SharePointSession(requests.Session):
     """
 
     def __init__(self, site=None, username=None, password=None, auth_tld=None):
-        super().__init__()
+        super(SharePointSession, self).__init__()
 
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
