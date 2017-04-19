@@ -133,7 +133,6 @@ class SharePointSession(requests.Session):
             with open(filename, "wb") as file:
                 for chunk in response:
                     file.write(chunk)
-            file.close()
         return response
 
     # Create session cookie from response cookie dictionary
