@@ -5,6 +5,7 @@ import xml.etree.ElementTree as et
 import pickle
 from getpass import getpass
 from datetime import datetime, timedelta
+from xml.sax.saxutils import escape
 
 # XML namespace URLs
 ns = {
@@ -67,10 +68,10 @@ class SharePointSession(requests.Session):
         with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
             saml = file.read()
 
-        # Insert username and password into SAML request
+        # Insert username and password into SAML request after escaping special characters
         password = self.password or getpass("Enter your password: ")
-        saml = saml.format(username=self.username,
-                           password=password,
+        saml = saml.format(username=escape(self.username),
+                           password=escape(password),
                            site=self.site)
 
         # Request security token from Microsoft Online
