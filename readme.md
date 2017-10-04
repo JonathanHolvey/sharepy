@@ -46,6 +46,7 @@ Properties of the authentication session can be saved to a file using the `save(
 ```python
 s.save()
 ```
+
 ```python
 s = sharepy.load()
 ```
