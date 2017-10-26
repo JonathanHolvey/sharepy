@@ -58,6 +58,10 @@ The default file name for saving and loading sessions is `sp-session.pkl`, howev
 - Constructing SharePoint API calls: [SharePoint REST API documentation](https://msdn.microsoft.com/en-us/library/office/dn292552.aspx)
 - Handling JSON objects in Python: [Python JSON module documentation](https://docs.python.org/3.4/library/json.html)
 
+## Licence
+
+This software is distributed under the GNU General Public License v3. Copyright 2016-2017 Jonathan Holvey.
+
 ## Credits
 
 1. The authentication method used here is based on [this post](https://allthatjs.com/2012/03/28/remote-authentication-in-sharepoint-online/) by Luc Stakenborg.
