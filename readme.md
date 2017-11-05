@@ -2,6 +2,14 @@
 
 This module will handle authentication for your SharePoint Online/O365 site, allowing you to make straightforward HTTP requests from Python. It extends the commonly used *Requests* module, meaning that returned objects are familliar, easy to work with and well documented. 
 
+## Installation
+
+SharePy can be installed from the Python Package Index, PyPI.
+
+```
+pip install sharepy
+```
+
 ## Initiate a SharePoint session:
 
 ```python
