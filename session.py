@@ -14,8 +14,8 @@ ns = {
 }
 
 
-def connect(site):
-    return SharePointSession(site)
+def connect(site, username=None, password=None):
+    return SharePointSession(site, username, password)
 
 
 def load(filename="sp-session.pkl"):
@@ -45,15 +45,15 @@ class SharePointSession(requests.Session):
       <Response [200]>
     """
 
-    def __init__(self, site=None):
+    def __init__(self, site=None, username=None, password=None):
         super().__init__()
-        self.password = None
 
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
             self.expire = datetime.now()
             # Request credentials from user
-            self.username = input("Enter your username: ")
+            self.username = username or input("Enter your username: ")
+            self.password = password
 
             if self._spauth():
                 self._redigest()
