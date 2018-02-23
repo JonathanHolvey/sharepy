@@ -23,7 +23,7 @@ def load(filename="sp-session.pkl"):
     session = SharePointSession()
     session.__dict__.update(pickle.load(open(filename, "rb")))
     if session._redigest() or session._spauth():
-        print("Connected to {} as {}\n".format(session.site, session.username))
+        print("Connected to {} as {}".format(session.site, session.username))
         # Re-save session to prevent it going stale
         try:
             session.save(filename)
@@ -75,18 +75,18 @@ class SharePointSession(requests.Session):
                            site=self.site)
 
         # Request security token from Microsoft Online
-        print("Requesting security token...")
+        print("Requesting security token...\r", end="")
         response = requests.post("https://login.microsoftonline.com/extSTS.srf", data=saml)
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
             token = root.find(".//wsse:BinarySecurityToken", ns).text
         except:
-            print("Token request failed. Check your username and password\n")
+            print("Token request failed. Check your username and password")
             return
 
         # Request access token from sharepoint site
-        print("Requesting access cookie...")
+        print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
                                  data=token, headers={"Host": self.site})
 
@@ -98,10 +98,10 @@ class SharePointSession(requests.Session):
         if response.status_code == requests.codes.ok:
             self.headers.update({"Cookie": cookie})
             self.cookie = cookie
-            print("Authentication successful\n")
+            print("Authentication successful   ")
             return True
         else:
-            print("Authentication failed\n")
+            print("Authentication failed       ")
 
     def _redigest(self):
         """Check and refresh site's request form digest"""
