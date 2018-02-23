@@ -19,6 +19,8 @@ s = sharepy.connect("example.sharepoint.com")
 
 You will be prompted to enter your username and password, which are used to request a security token from Microsoft. An access cookie and request digest token are then retrieved and saved to properties for later use. The digest token will be refreshed automatically as it expires.
 
+A username and password can also be provided as arguments of the `connect` function, if prompts are not desirable.
+
 ## Make an API call:
 
 ```python
