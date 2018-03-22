@@ -70,7 +70,7 @@ The default file name for saving and loading sessions is `sp-session.pkl`, howev
 
 ## Licence
 
-This software is distributed under the GNU General Public License v3. Copyright 2016-2017 Jonathan Holvey.
+This software is distributed under the GNU General Public License v3. Copyright 2016-2018 Jonathan Holvey.
 
 ## Credits
 
