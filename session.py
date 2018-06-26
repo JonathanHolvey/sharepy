@@ -15,7 +15,7 @@ ns = {
 
 
 def connect(site, username=None, password=None, auth_tld=None):
-    return SharePointSession(site, username, password)
+    return SharePointSession(site, username, password, auth_tld)
 
 
 def load(filename="sp-session.pkl"):
