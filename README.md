@@ -21,6 +21,8 @@ You will be prompted to enter your username and password, which are used to requ
 
 A username and password can also be provided as arguments of the `connect` function, if prompts are not desirable.
 
+The default authentication URL is `login.microsoftonline.com`. If another top level domain is required for a region-specific account, it can be specified using the `auth_tld` argument.
+
 ## Make an API call:
 
 ```python
