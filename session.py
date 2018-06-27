@@ -16,8 +16,8 @@ ns = {
 }
 
 
-def connect(site, username=None, password=None):
-    return SharePointSession(site, username, password)
+def connect(site, username=None, password=None, auth_tld=None):
+    return SharePointSession(site, username, password, auth_tld)
 
 
 def load(filename="sp-session.pkl"):
@@ -47,11 +47,12 @@ class SharePointSession(requests.Session):
       <Response [200]>
     """
 
-    def __init__(self, site=None, username=None, password=None):
+    def __init__(self, site=None, username=None, password=None, auth_tld=None):
         super().__init__()
 
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
+            self.auth_tld = auth_tld or "com"
             self.expire = datetime.now()
             # Request credentials from user
             self.username = username or input("Enter your username: ")
@@ -78,7 +79,13 @@ class SharePointSession(requests.Session):
 
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
-        response = requests.post("https://login.microsoftonline.com/extSTS.srf", data=saml)
+        auth_domain = "login.microsoftonline." + self.auth_tld
+        try:
+            response = requests.post("https://{}/extSTS.srf".format(auth_domain), data=saml)
+        except requests.exceptions.ConnectionError:
+            print("Could not connect to", auth_domain)
+            return
+        # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
         except et.ParseError:
