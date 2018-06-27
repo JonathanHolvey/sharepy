@@ -139,7 +139,7 @@ class SharePointSession(requests.Session):
     def getfile(self, url, *args, **kwargs):
         """Stream download of specified URL and output to file"""
         # Extract file name from request URL if not provided as keyword argument
-        filename = kwargs.pop("filename", re.search("[^\/]+$", url).group(0))
+        filename = kwargs.pop("filename", re.search(r"[^/]+$", url).group(0))
         kwargs["stream"] = True
         # Request file in stream mode
         response = self.get(url, *args, **kwargs)
