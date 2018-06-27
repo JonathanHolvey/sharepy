@@ -10,7 +10,9 @@ from xml.sax.saxutils import escape
 # XML namespace URLs
 ns = {
     "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
-    "d": "http://schemas.microsoft.com/ado/2007/08/dataservices"
+    "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
+    "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
+    "S": "http://www.w3.org/2003/05/soap-envelope"
 }
 
 
@@ -77,18 +79,24 @@ class SharePointSession(requests.Session):
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
         response = requests.post("https://login.microsoftonline.com/extSTS.srf", data=saml)
-        # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-            token = root.find(".//wsse:BinarySecurityToken", ns).text
-        except:
-            print("Token request failed. Check your username and password")
+        except et.ParseError:
+            print("Token request failed. The server did not send a valid response")
+            return
+
+        # Extract token from returned XML
+        token = root.find(".//wsse:BinarySecurityToken", ns)
+        # Check for errors and print error messages
+        if token is None or root.find(".//S:Fault", ns) is not None:
+            print("{}: {}".format(root.find(".//S:Text", ns).text,
+                                  root.find(".//psf:text", ns).text).strip().strip("."))
             return
 
         # Request access token from sharepoint site
         print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
-                                 data=token, headers={"Host": self.site})
+                                 data=token.text, headers={"Host": self.site})
 
         # Create access cookie from returned headers
         cookie = self._buildcookie(response.cookies)
