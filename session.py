@@ -78,7 +78,11 @@ class SharePointSession(requests.Session):
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
         auth_domain = "login.microsoftonline." + self.auth_tld
-        response = requests.post("https://{}/extSTS.srf".format(auth_domain), data=saml)
+        try:
+            response = requests.post("https://{}/extSTS.srf".format(auth_domain), data=saml)
+        except requests.exceptions.ConnectionError:
+            print("Could not connect to", auth_domain)
+            return
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
