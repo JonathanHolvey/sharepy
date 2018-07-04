@@ -16,8 +16,8 @@ ns = {
 }
 
 
-def connect(site, username=None, password=None, auth_tld=None):
-    return SharePointSession(site, username, password, auth_tld)
+def connect(site, username=None, password=None):
+    return SharePointSession(site, username, password)
 
 
 def load(filename="sp-session.pkl"):
@@ -47,12 +47,13 @@ class SharePointSession(requests.Session):
       <Response [200]>
     """
 
-    def __init__(self, site=None, username=None, password=None, auth_tld=None):
+    def __init__(self, site=None, username=None, password=None):
         super().__init__()
 
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
-            self.auth_tld = auth_tld or "com"
+            self.auth_url = None
+            self.auth_type = None
             self.expire = datetime.now()
             # Request credentials from user
             self.username = username or input("Enter your username: ")
@@ -67,6 +68,18 @@ class SharePointSession(requests.Session):
 
     def _spauth(self):
         """Authorise SharePoint session by generating session cookie"""
+
+        # Detect authentication type and URL
+        if self.auth_url is None:
+            realm_url = "https://login.microsoftonline.com/GetUserRealm.srf?login={}&xml=1"
+            root = et.fromstring(requests.get(realm_url.format(escape(self.username))).text)
+            self.auth_type = root.find("NameSpaceType").text.lower()
+            if self.auth_type != "federated":
+                auth_domain = root.find("CloudInstanceName").text
+                self.auth_url = "https://login.{}/extSTS.srf".format(auth_domain)
+            else:
+                self.auth_url = root.find("STSAuthUrl").text
+
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
             saml = file.read()
@@ -79,11 +92,10 @@ class SharePointSession(requests.Session):
 
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
-        auth_domain = "login.microsoftonline." + self.auth_tld
         try:
-            response = requests.post("https://{}/extSTS.srf".format(auth_domain), data=saml)
+            response = requests.post(self.auth_url, data=saml)
         except requests.exceptions.ConnectionError:
-            print("Could not connect to", auth_domain)
+            print("Could not connect to", self.auth_url)
             return
         # Parse and extract token from returned XML
         try:
@@ -100,7 +112,7 @@ class SharePointSession(requests.Session):
                                   root.find(".//psf:text", ns).text).strip().strip("."))
             return
 
-        # Request access token from sharepoint site
+        # Request access cookie from sharepoint site
         print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
                                  data=token.text, headers={"Host": self.site})
