@@ -65,6 +65,18 @@ s = sharepy.load()
 
 The default file name for saving and loading sessions is `sp-session.pkl`, however an alternative location can be provided as an argument to `save()` and `load()`.
 
+## Requests authentication
+
+SharePy implements Requests authentication classes that can also be used directly with Requests itself:
+
+```python
+import requests
+import sharepy
+
+auth = sharepy.sp_auth.SP_Online(site="example.sharepoint.com", username="exampleuser")
+r = requests.get("https://example.sharepoint.com", auth=auth)
+```
+
 ## Useful reading
 
 - Constructing SharePoint API calls: [SharePoint REST API documentation](https://msdn.microsoft.com/en-us/library/office/dn292552.aspx)

@@ -33,6 +33,7 @@ def detect(username, password=None):
 
 
 class SP_Online():
+    """A Requests authentication class for SharePoint Online"""
     def __init__(self, username, password=None, auth_url=None):
         self.site = None
         self.username = username
@@ -43,12 +44,14 @@ class SP_Online():
         self.digest = None
 
     def __call__(self, request):
+        """Inject cookies into requests as they are made"""
         if self.cookie and self.digest:
             request.headers.update({"Cookie": self.cookie,
                                     "Authorization": "Bearer " + self.digest})
         return request
 
     def get_token(self):
+        """Request authentication token from Microsoft"""
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
             saml = file.read()
@@ -83,7 +86,7 @@ class SP_Online():
         return token.text
 
     def get_cookie(self, token):
-        # Request access cookie from sharepoint site
+        """Request access cookie from sharepoint site"""
         print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
                                  data=token, headers={"Host": self.site})
@@ -101,7 +104,7 @@ class SP_Online():
             print("Authentication failed       ")
 
     def get_digest(self):
-        """Check and refresh site's request form digest"""
+        """Check and refresh sites cookie and request digest"""
         if self.expire <= datetime.now():
             # Request site context info from SharePoint site
             response = requests.post("https://" + self.site + "/_api/contextinfo",
@@ -121,7 +124,7 @@ class SP_Online():
         return True
 
     def login(self, site):
-        """Perform authentication and return True on success"""
+        """Perform authentication steps. Return True on success"""
         self.site = site
         token = self.get_token()
         if token and self.get_cookie(token):
