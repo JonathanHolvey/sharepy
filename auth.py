@@ -29,10 +29,10 @@ def detect(username, password=None):
     # For federated ADFS authentication
     else:
         auth_url = root.find("STSAuthUrl").text
-        return
+        return SharePointADFS(username=username, password=password, auth_url=auth_url)
 
 
-class SharePointOnline():
+class SharePointOnline(requests.auth.AuthBase):
     """A Requests authentication class for SharePoint Online"""
     def __init__(self, username, password=None, auth_url=None):
         self.site = None
@@ -45,12 +45,20 @@ class SharePointOnline():
 
     def __call__(self, request):
         """Inject cookies into requests as they are made"""
+        self._get_digest()
         if self.cookie and self.digest:
             request.headers.update({"Cookie": self.cookie,
                                     "Authorization": "Bearer " + self.digest})
         return request
 
-    def get_token(self):
+    def login(self, site):
+        """Perform authentication steps"""
+        self.site = site
+        token = self._get_token()
+        if token and self._get_cookie(token):
+            self._get_digest()
+
+    def _get_token(self):
         """Request authentication token from Microsoft"""
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__),
@@ -86,7 +94,7 @@ class SharePointOnline():
             return
         return token.text
 
-    def get_cookie(self, token):
+    def _get_cookie(self, token):
         """Request access cookie from sharepoint site"""
         print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
@@ -104,7 +112,7 @@ class SharePointOnline():
         else:
             print("Authentication failed       ")
 
-    def get_digest(self):
+    def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
         if self.expire <= datetime.now():
             # Request site context info from SharePoint site
@@ -124,13 +132,19 @@ class SharePointOnline():
 
         return True
 
-    def login(self, site):
-        """Perform authentication steps. Return True on success"""
-        self.site = site
-        token = self.get_token()
-        if token and self.get_cookie(token):
-            self.get_digest()
-
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""
         return "rtFa=" + cookies["rtFa"] + "; FedAuth=" + cookies["FedAuth"]
+
+
+class SharePointADFS(requests.auth.AuthBase):
+    """A Requests authentication class for SharePoint sites with federated authentication
+    Ported from https://github.com/Zerg00s/XSOM"""
+    def __init__(self, username, password=None, auth_url=None):
+        pass
+
+    def __call__():
+        pass
+
+    def login():
+        pass

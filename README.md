@@ -37,7 +37,7 @@ Headers can be added or overridden by supplying a dictionary to the relevant met
 r = s.get("https://example.sharepoint.com/_api/...", headers={"Accept": "application/atom+xml"})
 ```
 
-Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects.
+The request will send a digest header, allowing modifications to be made to SharePoint objects.
 
 ## Download a file:
 
