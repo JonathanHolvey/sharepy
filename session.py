@@ -1,8 +1,8 @@
 import os
 import re
-import requests
 import pickle
 
+import requests
 from . import auth
 
 
