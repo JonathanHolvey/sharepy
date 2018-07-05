@@ -53,7 +53,8 @@ class SharePointOnline():
     def get_token(self):
         """Request authentication token from Microsoft"""
         # Load SAML request template
-        with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
+        with open(os.path.join(os.path.dirname(__file__),
+                               "saml-templates/sp-online.xml"), "r") as file:
             saml = file.read()
 
         # Insert username and password into SAML request after escaping special characters
