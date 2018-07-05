@@ -34,11 +34,17 @@ def detect(username, password=None):
 
 class SP_Online():
     def __init__(self, username, password=None, auth_url=None):
+        self.site = None
         self.username = username
         self.password = password
         self.auth_url = auth_url or "https://login.microsoftonline.com/extSTS.srf"
         self.expire = datetime.now()
         self.cookie = None
+
+    def __call__(self, request):
+        request.headers.update({"Cookie": self.cookie,
+                                "Authorization": "Bearer " + self.digest})
+        return request
 
     def get_token(self):
         # Load SAML request template
@@ -87,7 +93,7 @@ class SP_Online():
 
         if response.status_code == requests.codes.ok:
             print("Authentication successful   ")
-            return cookie
+            self.cookie = cookie
         else:
             print("Authentication failed       ")
 
@@ -115,11 +121,7 @@ class SP_Online():
         """Perform authentication and return True on success"""
         self.site = site
         token = self.get_token()
-        self.cookie = self.get_cookie(token)
-        if token and self.cookie:
-            return self.get_digest()
-
-    def refresh(self):
+        self.get_cookie(token)
         self.get_digest()
 
     def _buildcookie(self, cookies):

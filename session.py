@@ -9,7 +9,7 @@ from . import sp_auth
 def connect(site, username=None, password=None):
     username = username or input("Enter your username: ")
     auth = sp_auth.detect(username=username, password=password)
-    return SharePointSession(site, auth)
+    return SharePointSession(site, auth=auth)
 
 
 def load(filename="sp-session.pkl"):
@@ -43,26 +43,25 @@ class SharePointSession(requests.Session):
         super().__init__()
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
-            self.sp_auth = auth
+            self.auth = auth
             self.headers.update({
                 "Accept": "application/json; odata=verbose",
                 "Content-type": "application/json; odata=verbose"
             })
-            self.sp_auth.login(self.site)
-            self.headers.update({"Cookie": self.sp_auth.cookie})
+            self.auth.login(self.site)
 
     def save(self, filename="sp-session.pkl"):
         """Serialise session object and save to file"""
         mode = "r+b" if os.path.isfile(filename) else "wb"
         pickle.dump(self.__dict__, open(filename, mode))
 
-    def post(self, url, *args, **kwargs):
-        """Make POST request and include authorisation headers"""
-        self.sp_auth.refresh()
-        if "headers" not in kwargs.keys():
-            kwargs["headers"] = {}
-        kwargs["headers"]["Authorization"] = "Bearer " + self.sp_auth.digest
-        return super().post(url, *args, **kwargs)
+    # def post(self, url, *args, **kwargs):
+    #     """Make POST request and include authorisation headers"""
+    #     self.auth.refresh()
+    #     if "headers" not in kwargs.keys():
+    #         kwargs["headers"] = {}
+    #     kwargs["headers"]["Authorization"] = "Bearer " + self.auth.digest
+    #     return super().post(url, *args, **kwargs)
 
     def getfile(self, url, *args, **kwargs):
         """Stream download of specified URL and output to file"""
