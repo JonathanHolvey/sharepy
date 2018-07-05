@@ -3,13 +3,13 @@ import re
 import requests
 import pickle
 
-from . import sp_auth
+from . import auth
 
 
 def connect(site, username=None, password=None):
     username = username or input("Enter your username: ")
-    auth = sp_auth.detect(username=username, password=password)
-    return SharePointSession(site, auth=auth)
+    autoauth = auth.detect(username=username, password=password)
+    return SharePointSession(site, auth=autoauth)
 
 
 def load(filename="sp-session.pkl"):

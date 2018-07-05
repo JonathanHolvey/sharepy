@@ -25,14 +25,14 @@ def detect(username, password=None):
     if auth_type != "federated":
         auth_domain = root.find("CloudInstanceName").text
         auth_url = "https://login.{}/extSTS.srf".format(auth_domain)
-        return SP_Online(username=username, password=password, auth_url=auth_url)
+        return SharePointOnline(username=username, password=password, auth_url=auth_url)
     # For federated ADFS authentication
     else:
         auth_url = root.find("STSAuthUrl").text
         return
 
 
-class SP_Online():
+class SharePointOnline():
     """A Requests authentication class for SharePoint Online"""
     def __init__(self, username, password=None, auth_url=None):
         self.site = None
