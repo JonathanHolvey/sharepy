@@ -73,7 +73,8 @@ SharePy implements Requests authentication classes that can also be used directl
 import requests
 import sharepy
 
-auth = sharepy.auth.SharePointOnline(site="example.sharepoint.com", username="exampleuser")
+auth = sharepy.auth.SharePointOnline(username="exampleuser")
+auth.login(site="example.sharepoint.com")
 r = requests.get("https://example.sharepoint.com", auth=auth)
 ```
 
