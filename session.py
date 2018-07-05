@@ -1,30 +1,22 @@
 import os
 import re
 import requests
-import xml.etree.ElementTree as et
 import pickle
-from getpass import getpass
-from datetime import datetime, timedelta
-from xml.sax.saxutils import escape
 
-# XML namespace URLs
-ns = {
-    "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
-    "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
-    "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
-    "S": "http://www.w3.org/2003/05/soap-envelope"
-}
+from . import sp_auth
 
 
 def connect(site, username=None, password=None):
-    return SharePointSession(site, username, password)
+    username = username or input("Enter your username: ")
+    auth = sp_auth.detect(username=username, password=password)
+    return SharePointSession(site, auth)
 
 
 def load(filename="sp-session.pkl"):
     """Load and return saved session object"""
     session = SharePointSession()
     session.__dict__.update(pickle.load(open(filename, "rb")))
-    if session._redigest() or session._spauth():
+    if session.auth.digest() or session.auth.auth():
         print("Connected to {} as {}".format(session.site, session.username))
         # Re-save session to prevent it going stale
         try:
@@ -47,108 +39,17 @@ class SharePointSession(requests.Session):
       <Response [200]>
     """
 
-    def __init__(self, site=None, username=None, password=None):
+    def __init__(self, site=None, auth=None):
         super().__init__()
-
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
-            self.auth_url = None
-            self.auth_type = None
-            self.expire = datetime.now()
-            # Request credentials from user
-            self.username = username or input("Enter your username: ")
-            self.password = password
-
-            if self._spauth():
-                self._redigest()
-                self.headers.update({
-                    "Accept": "application/json; odata=verbose",
-                    "Content-type": "application/json; odata=verbose"
-                })
-
-    def _spauth(self):
-        """Authorise SharePoint session by generating session cookie"""
-
-        # Detect authentication type and URL
-        if self.auth_url is None:
-            realm_url = "https://login.microsoftonline.com/GetUserRealm.srf?login={}&xml=1"
-            root = et.fromstring(requests.get(realm_url.format(escape(self.username))).text)
-            self.auth_type = root.find("NameSpaceType").text.lower()
-            if self.auth_type != "federated":
-                auth_domain = root.find("CloudInstanceName").text
-                self.auth_url = "https://login.{}/extSTS.srf".format(auth_domain)
-            else:
-                self.auth_url = root.find("STSAuthUrl").text
-
-        # Load SAML request template
-        with open(os.path.join(os.path.dirname(__file__), "saml-template.xml"), "r") as file:
-            saml = file.read()
-
-        # Insert username and password into SAML request after escaping special characters
-        password = self.password or getpass("Enter your password: ")
-        saml = saml.format(username=escape(self.username),
-                           password=escape(password),
-                           site=self.site)
-
-        # Request security token from Microsoft Online
-        print("Requesting security token...\r", end="")
-        try:
-            response = requests.post(self.auth_url, data=saml)
-        except requests.exceptions.ConnectionError:
-            print("Could not connect to", self.auth_url)
-            return
-        # Parse and extract token from returned XML
-        try:
-            root = et.fromstring(response.text)
-        except et.ParseError:
-            print("Token request failed. The server did not send a valid response")
-            return
-
-        # Extract token from returned XML
-        token = root.find(".//wsse:BinarySecurityToken", ns)
-        # Check for errors and print error messages
-        if token is None or root.find(".//S:Fault", ns) is not None:
-            print("{}: {}".format(root.find(".//S:Text", ns).text,
-                                  root.find(".//psf:text", ns).text).strip().strip("."))
-            return
-
-        # Request access cookie from sharepoint site
-        print("Requesting access cookie... \r", end="")
-        response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
-                                 data=token.text, headers={"Host": self.site})
-
-        # Create access cookie from returned headers
-        cookie = self._buildcookie(response.cookies)
-        # Verify access by requesting page
-        response = requests.get("https://" + self.site + "/_api/web", headers={"Cookie": cookie})
-
-        if response.status_code == requests.codes.ok:
-            self.headers.update({"Cookie": cookie})
-            self.cookie = cookie
-            print("Authentication successful   ")
-            return True
-        else:
-            print("Authentication failed       ")
-
-    def _redigest(self):
-        """Check and refresh site's request form digest"""
-        if self.expire <= datetime.now():
-            # Request site context info from SharePoint site
-            response = requests.post("https://" + self.site + "/_api/contextinfo",
-                                     data="", headers={"Cookie": self.cookie})
-            # Parse digest text and timeout from XML
-            try:
-                root = et.fromstring(response.text)
-                self.digest = root.find(".//d:FormDigestValue", ns).text
-                timeout = int(root.find(".//d:FormDigestTimeoutSeconds", ns).text)
-                self.headers.update({"Cookie": self._buildcookie(response.cookies)})
-            except:
-                print("Digest request failed")
-                return
-            # Calculate digest expiry time
-            self.expire = datetime.now() + timedelta(seconds=timeout)
-
-        return self.digest
+            self.sp_auth = auth
+            self.headers.update({
+                "Accept": "application/json; odata=verbose",
+                "Content-type": "application/json; odata=verbose"
+            })
+            self.sp_auth.login(self.site)
+            self.headers.update({"Cookie": self.sp_auth.cookie})
 
     def save(self, filename="sp-session.pkl"):
         """Serialise session object and save to file"""
@@ -157,10 +58,10 @@ class SharePointSession(requests.Session):
 
     def post(self, url, *args, **kwargs):
         """Make POST request and include authorisation headers"""
+        self.sp_auth.refresh()
         if "headers" not in kwargs.keys():
             kwargs["headers"] = {}
-        kwargs["headers"]["Authorization"] = "Bearer " + self._redigest()
-
+        kwargs["headers"]["Authorization"] = "Bearer " + self.sp_auth.digest
         return super().post(url, *args, **kwargs)
 
     def getfile(self, url, *args, **kwargs):
@@ -176,7 +77,3 @@ class SharePointSession(requests.Session):
                 for chunk in response:
                     file.write(chunk)
         return response
-
-    def _buildcookie(self, cookies):
-        """Create session cookie from response cookie dictionary"""
-        return "rtFa=" + cookies["rtFa"] + "; FedAuth=" + cookies["FedAuth"]
