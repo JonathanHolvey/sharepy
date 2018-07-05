@@ -40,10 +40,12 @@ class SP_Online():
         self.auth_url = auth_url or "https://login.microsoftonline.com/extSTS.srf"
         self.expire = datetime.now()
         self.cookie = None
+        self.digest = None
 
     def __call__(self, request):
-        request.headers.update({"Cookie": self.cookie,
-                                "Authorization": "Bearer " + self.digest})
+        if self.cookie and self.digest:
+            request.headers.update({"Cookie": self.cookie,
+                                    "Authorization": "Bearer " + self.digest})
         return request
 
     def get_token(self):
@@ -78,13 +80,13 @@ class SP_Online():
             print("{}: {}".format(root.find(".//S:Text", ns).text,
                                   root.find(".//psf:text", ns).text).strip().strip("."))
             return
-        return token
+        return token.text
 
     def get_cookie(self, token):
         # Request access cookie from sharepoint site
         print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
-                                 data=token.text, headers={"Host": self.site})
+                                 data=token, headers={"Host": self.site})
 
         # Create access cookie from returned headers
         cookie = self._buildcookie(response.cookies)
@@ -94,6 +96,7 @@ class SP_Online():
         if response.status_code == requests.codes.ok:
             print("Authentication successful   ")
             self.cookie = cookie
+            return True
         else:
             print("Authentication failed       ")
 
@@ -121,8 +124,8 @@ class SP_Online():
         """Perform authentication and return True on success"""
         self.site = site
         token = self.get_token()
-        self.get_cookie(token)
-        self.get_digest()
+        if token and self.get_cookie(token):
+            self.get_digest()
 
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""

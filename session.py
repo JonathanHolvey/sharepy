@@ -55,14 +55,6 @@ class SharePointSession(requests.Session):
         mode = "r+b" if os.path.isfile(filename) else "wb"
         pickle.dump(self.__dict__, open(filename, mode))
 
-    # def post(self, url, *args, **kwargs):
-    #     """Make POST request and include authorisation headers"""
-    #     self.auth.refresh()
-    #     if "headers" not in kwargs.keys():
-    #         kwargs["headers"] = {}
-    #     kwargs["headers"]["Authorization"] = "Bearer " + self.auth.digest
-    #     return super().post(url, *args, **kwargs)
-
     def getfile(self, url, *args, **kwargs):
         """Stream download of specified URL and output to file"""
         # Extract file name from request URL if not provided as keyword argument
