@@ -20,16 +20,19 @@ def detect(username, password=None):
     """Detect authentication type and URL"""
     realm_url = "https://login.microsoftonline.com/GetUserRealm.srf?login={}&xml=1"
     root = et.fromstring(requests.get(realm_url.format(escape(username))).text)
-    auth_type = root.find("NameSpaceType").text.lower()
+    auth_type = root.find("NameSpaceType").text
     # For regular SharePoint Online authentication
-    if auth_type != "federated":
+    if auth_type == "Managed":
         auth_domain = root.find("CloudInstanceName").text
         auth_url = "https://login.{}/extSTS.srf".format(auth_domain)
         return SharePointOnline(username=username, password=password, auth_url=auth_url)
     # For federated ADFS authentication
-    else:
-        auth_url = root.find("STSAuthUrl").text
+    elif auth_type == "Federated":
+        auth_url = root.find("STSAuthURL").text
         return SharePointADFS(username=username, password=password, auth_url=auth_url)
+    else:
+        print("'{}' namespace sites are not supported").format(auth_type)
+        return None
 
 
 class SharePointOnline(requests.auth.AuthBase):
@@ -139,12 +142,24 @@ class SharePointOnline(requests.auth.AuthBase):
 
 class SharePointADFS(requests.auth.AuthBase):
     """A Requests authentication class for SharePoint sites with federated authentication
-    Ported from https://github.com/Zerg00s/XSOM"""
+    Ported from https://github.com/Zerg00s/XSOM/blob/master/XSOM/Authenticator.cs"""
     def __init__(self, username, password=None, auth_url=None):
         pass
 
-    def __call__():
+    def __call__(self):
         pass
 
-    def login():
+    def login(self, site):
+        pass
+
+    def _get_adfs_token(self):
+        pass
+
+    def _get_sp_token(self, adfs_token):
+        pass
+
+    def _get_cookie(self, sp_token):
+        pass
+
+    def _get_digest(self):
         pass
