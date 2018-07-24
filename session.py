@@ -96,6 +96,7 @@ class SharePointSession(requests.Session):
         token = root.find(".//wsse:BinarySecurityToken", ns)
         # Check for errors and print error messages
         if token is None or root.find(".//S:Fault", ns) is not None:
+            print(et.tostring(root.find(".//S:Fault", ns)))
             print("{}: {}".format(root.find(".//S:Text", ns).text,
                                   root.find(".//psf:text", ns).text).strip().strip("."))
             return
