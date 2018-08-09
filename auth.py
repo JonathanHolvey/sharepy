@@ -3,6 +3,7 @@ import xml.etree.ElementTree as et
 from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
+from uuid import uuid4
 
 import requests
 
@@ -144,7 +145,9 @@ class SharePointADFS(requests.auth.AuthBase):
     """A Requests authentication class for SharePoint sites with federated authentication
     Ported from https://github.com/Zerg00s/XSOM/blob/master/XSOM/Authenticator.cs"""
     def __init__(self, username, password=None, auth_url=None):
-        pass
+        self.username = username
+        self.password = password
+        self.auth_url = auth_url
 
     def __call__(self):
         pass
@@ -153,7 +156,24 @@ class SharePointADFS(requests.auth.AuthBase):
         pass
 
     def _get_adfs_token(self):
-        pass
+        """Request authentication token from ADFS server"""
+        # Generate timestamps and GUID
+        created = expires = datetime.now().isoformat()
+        message_id = str(uuid4())
+
+        # Load SAML request template
+        with open(os.path.join(os.path.dirname(__file__),
+                               "saml-templates/sp-adfs.xml"), "r") as file:
+            saml = file.read()
+
+        # Insert variables into SAML request
+        password = self.password or getpass("Enter your password: ")
+        saml = saml.format(username=escape(self.username),
+                           password=escape(password),
+                           auth_url=self.auth_url,
+                           message_id=message_id,
+                           created=created,
+                           expires=expires)
 
     def _get_sp_token(self, adfs_token):
         pass
