@@ -153,9 +153,11 @@ class SharePointADFS(requests.auth.AuthBase):
         pass
 
     def login(self, site):
-        pass
+        """Perform authentication steps"""
+        self.site = site
+        self.token = self._get_token()
 
-    def _get_adfs_token(self):
+    def _get_token(self):
         """Request authentication token from ADFS server"""
         # Generate timestamps and GUID
         created = expires = datetime.now().isoformat()
@@ -175,8 +177,21 @@ class SharePointADFS(requests.auth.AuthBase):
                            created=created,
                            expires=expires)
 
-    def _get_sp_token(self, adfs_token):
-        pass
+        # Request security token from Microsoft Online
+        print("Requesting security token...\r", end="")
+        try:
+            response = requests.post(self.auth_url, data=saml)
+        except requests.exceptions.ConnectionError:
+            print("Could not connect to", self.auth_url)
+            return
+        # Parse and extract token from returned XML
+        try:
+            root = et.fromstring(response.text)
+        except et.ParseError:
+            print("Token request failed. The server did not send a valid response")
+            return
+
+        print(response.text)
 
     def _get_cookie(self, sp_token):
         pass
