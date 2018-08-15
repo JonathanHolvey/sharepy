@@ -99,7 +99,7 @@ class SharePointSession(requests.Session):
             if root.find(".//S:Text", ns) is not None and root.find(".//psf:text", ns) is not None:
                 print("{}: {}".format(root.find(".//S:Text", ns).text,
                                       root.find(".//psf:text", ns).text).strip().strip("."))
-            elif root.find(".//S:Detail") is not None:
+            elif root.find(".//S:Detail", ns) is not None:
                 print("Error: " + " ".join(root.find(".//S:Detail", ns).itertext()))
             return
 
