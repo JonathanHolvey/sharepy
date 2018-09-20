@@ -101,6 +101,8 @@ class SharePointSession(requests.Session):
                                       root.find(".//psf:text", ns).text).strip().strip("."))
             elif root.find(".//S:Detail", ns) is not None:
                 print("Error: " + " ".join(root.find(".//S:Detail", ns).itertext()))
+            else:
+                print("Unknown error fetching security token:\n" + root.tostring())
             return
 
         # Request access token from sharepoint site
