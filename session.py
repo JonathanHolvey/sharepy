@@ -164,6 +164,13 @@ class SharePointSession(requests.Session):
                 for chunk in response:
                     file.write(chunk)
         return response
+    def streamfile(self, url, *args, **kwargs):
+        """Stream chunk bytes from specified URL to string in Python"""
+        kwargs["stream"] = True
+        # Request file in stream mode
+        response = self.get(url, *args, **kwargs)
+        if response.status_code == requests.codes.ok:
+            return ''.join([chunk.decode('ascii') for chunk in response])
 
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""
