@@ -10,12 +10,23 @@ class spListsAPI():
     This class is intended to be used on the driver code side of the SharePointSession class
     of sharepy
     An adaptation of https://github.com/thybag/PHP-SharePoint-Lists-API/
+    
+    Required: the URL supplied to the sharepy class on initialization should be in the
+    below formats, and MUST end with /_vti_bin . This ending is the best way to standardize
+    this code across varying SharePoint site installation use cases.
+
+     https://<tenant>.sharepoint.com/sites/<subsite>/_vti_bin/ or
+     https://<tenant>.sharepoint.com/<top site>/_vti_bin/
+    
+    If you know how to find the WSDL files for your SharePoint site, and your use case doesn't
+    fall within the above examples you can set the vti_bin_url flag to your specific URL.
     """
 
-    def __init__(self, SP_SESSION=None):
+    def __init__(self, SP_SESSION=None, vti_bin_url=None):
         self.SP_SESSION = SP_SESSION
         self.spsTenantUrl = SP_SESSION.tenantUrl
-        self.spsBase = "https://"+ re.search('((^.+/sites/[^/]+/))', SP_SESSION.site).group(1) + "_vti_bin/Lists.asmx"
+        
+        self.spsBase = vti_bin_url or "https://" + re.search('^(.+/_vti_bin)', SP_SESSION.site).group(1) + "/Lists.asmx"
         self.SP_SESSION.headers.update({"Content-Type":"text/xml; charset=utf-8", "Content-Length":"length", "Host":self.SP_SESSION.tenantUrl})
 
     '''

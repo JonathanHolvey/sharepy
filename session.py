@@ -208,7 +208,7 @@ class SharePointSession(requests.Session):
         response = requests.get(url=SPO_IDCRL_URL, headers=headers)
         spoidcrlCookie = response.cookies['SPOIDCRL']
         if response.status_code == requests.codes.ok:
-            print("Authentication successful")
+            print("ADFS Authentication successful")
 
             # Add the SPOIDCRL cookie to the session
             self.cookie = {"SPOIDCRL": spoidcrlCookie}
@@ -216,8 +216,10 @@ class SharePointSession(requests.Session):
             self.cookies.update({"SPOIDCRL": spoidcrlCookie})
             return True
         else:
-            print("Authentication failed")
+            print("ADFS Authentication failed")
 
+    def getSPOIDCRLCookie(self):
+        return self.cookie['SPOIDCRL']
         
     def _redigest(self):
         """Check and refresh site's request form digest"""
