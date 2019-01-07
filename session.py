@@ -35,7 +35,7 @@ class SharePointSession(requests.Session):
     Basic Usage::
       >>> import sharepy
       >>> s = sharepy.connect("example.sharepoint.com")
-      >>> s.get("https://exemple.sharepoint.com/_api/web/lists")
+      >>> s.get("https://example.sharepoint.com/_api/web/lists")
       <Response [200]>
     """
 
