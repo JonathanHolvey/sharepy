@@ -15,9 +15,10 @@ def connect(site, username=None, password=None):
 def load(filename="sp-session.pkl"):
     """Load and return saved session object"""
     session = SharePointSession()
-    session.__dict__.update(pickle.load(open(filename, "rb")))
-    if session.auth.digest() or session.auth.auth():
-        print("Connected to {} as {}".format(session.site, session.username))
+    with open(filename, "rb") as file:
+        session.__dict__.update(pickle.load(file))
+    if session.auth._get_digest() or session.auth.login():
+        print("Connected to {} as {}".format(session.site, session.auth.username))
         # Re-save session to prevent it going stale
         try:
             session.save(filename)
@@ -53,7 +54,8 @@ class SharePointSession(requests.Session):
     def save(self, filename="sp-session.pkl"):
         """Serialise session object and save to file"""
         mode = "r+b" if os.path.isfile(filename) else "wb"
-        pickle.dump(self.__dict__, open(filename, mode))
+        with open(filename, mode) as file:
+            pickle.dump(self.__dict__, file)
 
     def getfile(self, url, *args, **kwargs):
         """Stream download of specified URL and output to file"""
