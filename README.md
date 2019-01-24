@@ -37,7 +37,7 @@ Headers can be added or overridden by supplying a dictionary to the relevant met
 r = s.get("https://example.sharepoint.com/_api/...", headers={"Accept": "application/atom+xml"})
 ```
 
-Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects.
+The request will send a digest header, allowing modifications to be made to SharePoint objects.
 
 ## Download a file:
 
@@ -64,6 +64,19 @@ s = sharepy.load()
 ```
 
 The default file name for saving and loading sessions is `sp-session.pkl`, however an alternative location can be provided as an argument to `save()` and `load()`.
+
+## Requests authentication
+
+SharePy implements Requests authentication classes that can also be used directly with Requests itself:
+
+```python
+import requests
+import sharepy
+
+auth = sharepy.auth.SharePointOnline(username="user@example.com")
+auth.login(site="example.sharepoint.com")
+r = requests.get("https://example.sharepoint.com", auth=auth)
+```
 
 ## Useful reading
 
