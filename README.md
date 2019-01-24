@@ -91,3 +91,4 @@ This software is distributed under the GNU General Public License v3. Copyright 
 
 1. The authentication method used here is based on [this post](https://allthatjs.com/2012/03/28/remote-authentication-in-sharepoint-online/) by Luc Stakenborg.
 2. Additional help regarding request digests from sadegh's comment on [this post](http://paulryan.com.au/2014/spo-remote-authentication-rest/) by Paul Ryan.
+3. Contributed code from @joemeneses for ADFS authentication.
