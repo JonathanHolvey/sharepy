@@ -77,7 +77,7 @@ class SharePointOnline(requests.auth.AuthBase):
                            site=self.site)
 
         # Request security token from Microsoft Online
-        print("Requesting security token...\r", end="")
+        print("Requesting security token...")
         try:
             response = requests.post(self.auth_url, data=saml)
         except requests.exceptions.ConnectionError:
@@ -101,7 +101,7 @@ class SharePointOnline(requests.auth.AuthBase):
 
     def _get_cookie(self, token):
         """Request access cookie from sharepoint site"""
-        print("Requesting access cookie... \r", end="")
+        print("Requesting access cookie... ")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
                                  data=token, headers={"Host": self.site})
 
@@ -169,7 +169,7 @@ class SharePointADFS(requests.auth.AuthBase):
         if site.find('://') < 0:
             self.tenantBaseURL = re.search(r"([^/]+)", site).group(0)
         else: # http(s) exists
-            self.tenantBaseURL = re.serach(r'/{2}([^/]+)', site).group(1)
+            self.tenantBaseURL = re.search(r'/{2}([^/]+)', site).group(1)
         self.tenantBaseURL.find
         self._get_token()
         self._get_cookie()
@@ -202,7 +202,7 @@ class SharePointADFS(requests.auth.AuthBase):
                            expires=expiresStr)
         
         # Request security token from Microsoft Online
-        print("Requesting security token...\r", end="")
+        print("Requesting security token...")
         try:
             response = requests.post(self.auth_url, data=saml, headers=headers)
         except requests.exceptions.ConnectionError:
@@ -212,12 +212,13 @@ class SharePointADFS(requests.auth.AuthBase):
         try:
             root = et.fromstring(response.text)
         except et.ParseError:
-            print("Token request failed. The server did not send a valid response\r", end="")
+            print("Token request failed. The server did not send a valid response")
             return
         try:
-            samlAssertion = (re.search(r'<saml:Assertion.*\/saml:Assertion>', response.text)).group(0)
+            samlAssertion = re.search(r'<saml.?:Assertion.*\/saml.?:Assertion>',
+                                      response.text, re.DOTALL).group(0)
         except AttributeError:
-            print("Token requested, but response did not include the STS SAML Assertion.\r", end="")
+            print("Token requested, but response did not include the STS SAML Assertion.")
             return
         
         print("SAML Assertion received.")
@@ -239,12 +240,12 @@ class SharePointADFS(requests.auth.AuthBase):
         try:
             root = et.fromstring(response.text)
         except et.ParseError:
-            print("BinarySecurityToken request failed. The server did not send a valid response\r", end="")
+            print("BinarySecurityToken request failed. The server did not send a valid response")
             return
         try:
             binarySecurityToken = (re.search(r'BinarySecurityToken Id.*>([^<]+)', response.text)).group(1)
         except AttributeError:
-            print("BinarySecurityToken requested, but response did not include the STS SAML Assertion.\r", end="")
+            print("BinarySecurityToken requested, but response did not include the STS SAML Assertion.")
             return
         
         print("BinarySecurityToken received.")
