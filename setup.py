@@ -8,5 +8,5 @@ setup(name='sharepy',
       author='Jonathon Holvey',
       author_email='jonathan.holvey@outlook.com',
       license='GPLv3',
-      packages=['shareoy'],
+      packages=['sharepy'],
       zip_safe=False)
