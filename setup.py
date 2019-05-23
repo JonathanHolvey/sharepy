@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(name='sharepy',
@@ -8,5 +8,5 @@ setup(name='sharepy',
       author='Jonathon Holvey',
       author_email='jonathan.holvey@outlook.com',
       license='GPLv3',
-      packages=['sharepy'],
+      packages=find_packages(),
       zip_safe=False)
