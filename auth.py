@@ -153,7 +153,6 @@ class SharePointADFS(requests.auth.AuthBase):
         self.token = None
         self.cookie = None
         self.expire = datetime.now()
-        self.tenantBaseURL = None
         self.digest = None
 
     def __call__(self, request):
@@ -166,12 +165,6 @@ class SharePointADFS(requests.auth.AuthBase):
     def login(self, site):
         """Perform authentication steps"""
         self.site = site
-        # check if http(s) is prepended (not found < 0)
-        if site.find('://') < 0:
-            self.tenantBaseURL = re.search(r"([^/]+)", site).group(0)
-        else:  # http(s) exists
-            self.tenantBaseURL = re.serach(r'/{2}([^/]+)', site).group(1)
-        self.tenantBaseURL.find
         self._get_token()
         self._get_cookie()
         self._get_digest()
@@ -240,9 +233,7 @@ class SharePointADFS(requests.auth.AuthBase):
         return True
 
     def _get_cookie(self):
-        # regex will get the 'tenant url' from the site provided for login
-        # SPO_IDCRL_URL = "https://" + re.search('(.+\.com)/', self.site).group(1) + "/_vti_bin/idcrl.svc/"
-        SPO_IDCRL_URL = "https://" + self.tenantBaseURL + "/_vti_bin/idcrl.svc/"
+        SPO_IDCRL_URL = "https://" + self.site + "/_vti_bin/idcrl.svc/"
         # HTTP Post request with authorization headers
         headers = {"Authorization": "BPOSIDCRL " + self.token,
                    "X-IDCRL_ACCEPTED": "t",
@@ -264,7 +255,7 @@ class SharePointADFS(requests.auth.AuthBase):
         if self.expire <= datetime.now():
             # Template for SOAP digest request using <tenant>.sharepoint.com/sites/<sub site>/_vti_bin/sites
             headers = ({"SOAPAction": "http://schemas.microsoft.com/sharepoint/soap/GetUpdatedFormDigestInformation",
-                        "Host": self.tenantBaseURL,
+                        "Host": self.site,
                         "Content-Type": "text/xml;charset=utf-8",
                         "Cookie": self.cookie,
                         "X-RequestForceAuthentication": "true"})
@@ -274,7 +265,7 @@ class SharePointADFS(requests.auth.AuthBase):
                 digestEnvelope = file.read()
 
             # Request site context info from SharePoint site
-            requestUrl = "https://" + self.tenantBaseURL + "/_vti_bin/sites.asmx"
+            requestUrl = "https://" + self.site + "/_vti_bin/sites.asmx"
             response = requests.post(requestUrl, data=digestEnvelope, headers=headers)
 
             # Parse digest text and timeout from XML
