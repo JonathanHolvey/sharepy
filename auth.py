@@ -11,6 +11,7 @@ import requests
 
 # XML namespace URLs
 ns = {
+    "saml": "urn:oasis:names:tc:SAML:1.0:assertion",
     "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
     "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
@@ -211,16 +212,10 @@ class SharePointADFS(requests.auth.AuthBase):
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-        except et.ParseError:
-            print("Token request failed. The server did not send a valid response\r", end="")
+            samlAssertion = et.tostring(root.find(".//saml:Assertion"))
+        except (AttributeError, et.ParseError):
+            print("Error getting security token")
             return
-        try:
-            samlAssertion = (re.search(r'<saml:Assertion.*\/saml:Assertion>', response.text)).group(0)
-        except AttributeError:
-            print("Token requested, but response did not include the STS SAML Assertion.\r", end="")
-            return
-
-        print("SAML Assertion received.")
 
         # Get the BinarySecurityToken
 
@@ -230,26 +225,18 @@ class SharePointADFS(requests.auth.AuthBase):
         with open(os.path.join(os.path.dirname(__file__),
                   "saml-templates/sp-adfs-stsBinaryToken.xml"), "r") as file:
             saml = file.read()
-
-        # Format saml to receive BinarySecurityToken
         saml = saml.format(customSTSAssertion=samlAssertion,
                            msoEndpoint="sharepoint.com")
         response = requests.post(url=MSO_AUTH_URL, data=saml, headers=headers)
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-        except et.ParseError:
-            print("BinarySecurityToken request failed. The server did not send a valid response\r", end="")
-            return
-        try:
-            binarySecurityToken = (re.search(r'BinarySecurityToken Id.*>([^<]+)', response.text)).group(1)
-        except AttributeError:
-            print("BinarySecurityToken requested, but response did not include the STS SAML Assertion.\r", end="")
+            token = root.find(".//wsse:BinarySecurityToken", ns).text
+        except (AttributeError, et.ParseError):
+            print("Error getting security token")
             return
 
-        print("BinarySecurityToken received.")
-        self.token = binarySecurityToken
-
+        self.token = token
         return True
 
     def _get_cookie(self):
@@ -274,7 +261,6 @@ class SharePointADFS(requests.auth.AuthBase):
 
     def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
-
         if self.expire <= datetime.now():
             # Template for SOAP digest request using <tenant>.sharepoint.com/sites/<sub site>/_vti_bin/sites
             headers = ({"SOAPAction": "http://schemas.microsoft.com/sharepoint/soap/GetUpdatedFormDigestInformation",
@@ -306,5 +292,4 @@ class SharePointADFS(requests.auth.AuthBase):
 
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""
-
         return "SPOIDCRL=" + cookies["SPOIDCRL"]
