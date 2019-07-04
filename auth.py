@@ -173,9 +173,7 @@ class SharePointADFS(requests.auth.AuthBase):
         """Request authentication token from ADFS server"""
         # Generate timestamps and GUID
         created = datetime.utcnow()
-        createdStr = str(datetime.utcnow()).replace(' ', 'T') + 'Z'
         expires = created + timedelta(minutes=10)
-        expiresStr = str(expires).replace(' ', 'T') + 'Z'
         message_id = str(uuid4())
 
         # Load SAML request template
@@ -192,8 +190,8 @@ class SharePointADFS(requests.auth.AuthBase):
                            password=escape(password),
                            auth_url=self.auth_url,
                            message_id=message_id,
-                           created=createdStr,
-                           expires=expiresStr)
+                           created=created.isoformat() + "Z",
+                           expires=expires.isoformat() + "Z")
 
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
