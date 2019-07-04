@@ -129,7 +129,7 @@ class SharePointOnline(requests.auth.AuthBase):
                 self.digest = root.find(".//d:FormDigestValue", ns).text
                 self.cookie = self._buildcookie(response.cookies)
                 timeout = int(root.find(".//d:FormDigestTimeoutSeconds", ns).text)
-            except:
+            except Exception:
                 print("Digest request failed")
                 return
             # Calculate digest expiry time
@@ -159,7 +159,7 @@ class SharePointADFS(requests.auth.AuthBase):
         """Inject cookies into requests as they are made"""
         if self.cookie and self.digest:
             request.headers.update({"Content-Type": "text/xml; charset=utf-8",
-                                    "Cookie" : self.cookie})
+                                    "Cookie": self.cookie})
         return request
 
     def login(self, site):
@@ -168,7 +168,7 @@ class SharePointADFS(requests.auth.AuthBase):
         # check if http(s) is prepended (not found < 0)
         if site.find('://') < 0:
             self.tenantBaseURL = re.search(r"([^/]+)", site).group(0)
-        else: # http(s) exists
+        else:  # http(s) exists
             self.tenantBaseURL = re.serach(r'/{2}([^/]+)', site).group(1)
         self.tenantBaseURL.find
         self._get_token()
@@ -188,7 +188,7 @@ class SharePointADFS(requests.auth.AuthBase):
         with open(os.path.join(os.path.dirname(__file__),
                                "saml-templates/sp-adfs-stsAuthAssertion.xml"), "r") as file:
             saml = file.read()
-        
+
         # Define headers to request the token
         headers = {"Content-Type": "application/soap+xml; charset=utf-8"}
 
@@ -200,7 +200,7 @@ class SharePointADFS(requests.auth.AuthBase):
                            message_id=message_id,
                            created=createdStr,
                            expires=expiresStr)
-        
+
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
         try:
@@ -219,7 +219,7 @@ class SharePointADFS(requests.auth.AuthBase):
         except AttributeError:
             print("Token requested, but response did not include the STS SAML Assertion.\r", end="")
             return
-        
+
         print("SAML Assertion received.")
 
         # Get the BinarySecurityToken
@@ -227,8 +227,8 @@ class SharePointADFS(requests.auth.AuthBase):
         # Define MS Online authentication REST endpoint
         MSO_AUTH_URL = "https://login.microsoftonline.com/rst2.srf"
 
-        with open(os.path.join(os.path.dirname(__file__), 
-                "saml-templates/sp-adfs-stsBinaryToken.xml"), "r") as file:
+        with open(os.path.join(os.path.dirname(__file__),
+                  "saml-templates/sp-adfs-stsBinaryToken.xml"), "r") as file:
             saml = file.read()
 
         # Format saml to receive BinarySecurityToken
@@ -246,20 +246,20 @@ class SharePointADFS(requests.auth.AuthBase):
         except AttributeError:
             print("BinarySecurityToken requested, but response did not include the STS SAML Assertion.\r", end="")
             return
-        
+
         print("BinarySecurityToken received.")
         self.token = binarySecurityToken
 
         return True
-    
+
     def _get_cookie(self):
         # regex will get the 'tenant url' from the site provided for login
-        #SPO_IDCRL_URL = "https://" + re.search('(.+\.com)/', self.site).group(1) + "/_vti_bin/idcrl.svc/"
+        # SPO_IDCRL_URL = "https://" + re.search('(.+\.com)/', self.site).group(1) + "/_vti_bin/idcrl.svc/"
         SPO_IDCRL_URL = "https://" + self.tenantBaseURL + "/_vti_bin/idcrl.svc/"
         # HTTP Post request with authorization headers
-        headers = {"Authorization": "BPOSIDCRL " + self.token, 
-                   "X-IDCRL_ACCEPTED":"t", 
-                   "User-Agent": "" }
+        headers = {"Authorization": "BPOSIDCRL " + self.token,
+                   "X-IDCRL_ACCEPTED": "t",
+                   "User-Agent": ""}
         response = requests.get(url=SPO_IDCRL_URL, headers=headers)
 
         if response.status_code == requests.codes.ok:
@@ -267,35 +267,35 @@ class SharePointADFS(requests.auth.AuthBase):
 
             # Add the SPOIDCRL cookie to the session
             self.cookie = self._buildcookie(response.cookies)
-            
+
             return True
         else:
             print("ADFS Authentication failed")
 
     def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
-        
+
         if self.expire <= datetime.now():
             # Template for SOAP digest request using <tenant>.sharepoint.com/sites/<sub site>/_vti_bin/sites
             headers = ({"SOAPAction": "http://schemas.microsoft.com/sharepoint/soap/GetUpdatedFormDigestInformation",
-                                "Host" : self.tenantBaseURL,
-                                "Content-Type" : "text/xml;charset=utf-8",
-                                "Cookie" : self.cookie,
-                                "X-RequestForceAuthentication" : "true"})
-            
-            with open(os.path.join(os.path.dirname(__file__), 
-                    "saml-templates/sp-updateDigest.xml"), "r") as file:
-                    digestEnvelope = file.read()
+                        "Host": self.tenantBaseURL,
+                        "Content-Type": "text/xml;charset=utf-8",
+                        "Cookie": self.cookie,
+                        "X-RequestForceAuthentication": "true"})
+
+            with open(os.path.join(os.path.dirname(__file__),
+                      "saml-templates/sp-updateDigest.xml"), "r") as file:
+                digestEnvelope = file.read()
 
             # Request site context info from SharePoint site
             requestUrl = "https://" + self.tenantBaseURL + "/_vti_bin/sites.asmx"
             response = requests.post(requestUrl, data=digestEnvelope, headers=headers)
-            
+
             # Parse digest text and timeout from XML
-            try:   
+            try:
                 self.digest = re.search(r"<DigestValue>(.+)</DigestValue>", response.text).group(1)
-                timeout = int(re.search(r"Seconds>(\d+)<", response.text).group(1))  
-            except:
+                timeout = int(re.search(r"Seconds>(\d+)<", response.text).group(1))
+            except Exception:
                 print("Digest request failed")
                 return
 
@@ -303,7 +303,8 @@ class SharePointADFS(requests.auth.AuthBase):
             self.expire = datetime.now() + timedelta(seconds=timeout)
 
         return True
+
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""
-        
+
         return "SPOIDCRL=" + cookies["SPOIDCRL"]
