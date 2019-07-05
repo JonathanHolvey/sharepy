@@ -12,14 +12,14 @@
             <ps:BinaryVersion>5</ps:BinaryVersion>
             <ps:HostingApp>Managed IDCRL</ps:HostingApp>
         </ps:AuthInfo>
-        <wsse:Security>{customSTSAssertion}</wsse:Security>
+        <wsse:Security>{assertion}</wsse:Security>
     </S:Header>
     <S:Body>
         <wst:RequestSecurityToken xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust" Id="RST0">
             <wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>
             <wsp:AppliesTo>
                 <wsa:EndpointReference>
-                    <wsa:Address>{msoEndpoint}</wsa:Address>
+                    <wsa:Address>{endpoint}</wsa:Address>
                 </wsa:EndpointReference>
             </wsp:AppliesTo>
             <wsp:PolicyReference URI="MBI"></wsp:PolicyReference>

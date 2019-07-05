@@ -216,8 +216,8 @@ class SharePointADFS(requests.auth.AuthBase):
         with open(os.path.join(os.path.dirname(__file__),
                   "saml-templates/sp-adfs-stsBinaryToken.xml"), "r") as file:
             saml = file.read()
-        saml = saml.format(customSTSAssertion=samlAssertion,
-                           msoEndpoint="sharepoint.com")
+        saml = saml.format(assertion=samlAssertion,
+                           endpoint="sharepoint.com")
         response = requests.post(url=MSO_AUTH_URL, data=saml, headers=headers)
         # Parse and extract token from returned XML
         try:
