@@ -4,7 +4,6 @@ from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
 from uuid import uuid4
-import re
 
 import requests
 
@@ -268,9 +267,10 @@ class SharePointADFS(requests.auth.AuthBase):
 
             # Parse digest text and timeout from XML
             try:
-                self.digest = re.search(r"<DigestValue>(.+)</DigestValue>", response.text).group(1)
-                timeout = int(re.search(r"Seconds>(\d+)<", response.text).group(1))
-            except Exception:
+                root = et.fromstring(response.text)
+                self.digext = root.find(".//DigestValue").text
+                timeout = root.find(".//TimeoutSeconds").text
+            except (AttributeError, et.ParseError):
                 print("Digest request failed")
                 return
 
