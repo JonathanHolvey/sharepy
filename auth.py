@@ -10,12 +10,13 @@ import requests
 
 # XML namespace URIs
 ns = {
-    "saml": "urn:oasis:names:tc:SAML:1.0:assertion",
-    "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
-    "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
-    "S": "http://www.w3.org/2003/05/soap-envelope",
     "ds": "http://www.w3.org/2000/09/xmldsig#",
+    "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
+    "S": "http://www.w3.org/2003/05/soap-envelope",
+    "saml": "urn:oasis:names:tc:SAML:1.0:assertion",
+    "soap": "http://schemas.microsoft.com/sharepoint/soap/",
+    "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
 }
 # Register namespaces for XML serialisation
 for alias, uri in ns.items():
@@ -272,8 +273,8 @@ class SharePointADFS(requests.auth.AuthBase):
             # Parse digest text and timeout from XML
             try:
                 root = et.fromstring(response.text)
-                self.digext = root.find(".//DigestValue").text
-                timeout = root.find(".//TimeoutSeconds").text
+                self.digext = root.find(".//soap:DigestValue", ns).text
+                timeout = root.find(".//soap:TimeoutSeconds", ns).text
             except (AttributeError, et.ParseError):
                 print("Digest request failed")
                 return
