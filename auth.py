@@ -8,14 +8,18 @@ from uuid import uuid4
 import requests
 
 
-# XML namespace URLs
+# XML namespace URIs
 ns = {
     "saml": "urn:oasis:names:tc:SAML:1.0:assertion",
     "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
     "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
-    "S": "http://www.w3.org/2003/05/soap-envelope"
+    "S": "http://www.w3.org/2003/05/soap-envelope",
+    "ds": "http://www.w3.org/2000/09/xmldsig#",
 }
+# Register namespaces for XML serialisation
+for alias, uri in ns.items():
+    et.register_namespace(alias, uri)
 
 
 def detect(username, password=None):
@@ -202,7 +206,7 @@ class SharePointADFS(requests.auth.AuthBase):
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-            samlAssertion = et.tostring(root.find(".//saml:Assertion"))
+            samlAssertion = et.tostring(root.find(".//saml:Assertion", ns), encoding='unicode')
         except (AttributeError, et.ParseError):
             print("Error getting security token")
             return
