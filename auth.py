@@ -207,7 +207,7 @@ class SharePointADFS(requests.auth.AuthBase):
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-            samlAssertion = et.tostring(root.find(".//saml:Assertion", ns), encoding='unicode')
+            saml_assertion = et.tostring(root.find(".//saml:Assertion", ns), encoding='unicode')
         except (AttributeError, et.ParseError):
             print("Error getting security token")
             return
@@ -220,7 +220,7 @@ class SharePointADFS(requests.auth.AuthBase):
         with open(os.path.join(os.path.dirname(__file__),
                   "saml-templates/sp-adfs-stsBinaryToken.xml"), "r") as file:
             saml = file.read()
-        saml = saml.format(assertion=samlAssertion,
+        saml = saml.format(assertion=saml_assertion,
                            endpoint="sharepoint.com")
         response = requests.post(url=MSO_AUTH_URL, data=saml, headers=headers)
         # Parse and extract token from returned XML
@@ -255,20 +255,20 @@ class SharePointADFS(requests.auth.AuthBase):
     def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
         if self.expire <= datetime.now():
-            # Template for SOAP digest request using <tenant>.sharepoint.com/sites/<sub site>/_vti_bin/sites
-            headers = ({"SOAPAction": "http://schemas.microsoft.com/sharepoint/soap/GetUpdatedFormDigestInformation",
+
+            with open(os.path.join(os.path.dirname(__file__),
+                      "saml-templates/sp-updateDigest.xml"), "r") as file:
+                digest_envelope = file.read()
+
+            # Request site context info from SharePoint site
+            requestUrl = "https://" + self.site + "/_vti_bin/sites.asmx"
+            headers = ({"SOAPAction": "http://schemas.microsoft.com/"
+                       "sharepoint/soap/GetUpdatedFormDigestInformation",
                         "Host": self.site,
                         "Content-Type": "text/xml;charset=utf-8",
                         "Cookie": self.cookie,
                         "X-RequestForceAuthentication": "true"})
-
-            with open(os.path.join(os.path.dirname(__file__),
-                      "saml-templates/sp-updateDigest.xml"), "r") as file:
-                digestEnvelope = file.read()
-
-            # Request site context info from SharePoint site
-            requestUrl = "https://" + self.site + "/_vti_bin/sites.asmx"
-            response = requests.post(requestUrl, data=digestEnvelope, headers=headers)
+            response = requests.post(requestUrl, data=digest_envelope, headers=headers)
 
             # Parse digest text and timeout from XML
             try:
