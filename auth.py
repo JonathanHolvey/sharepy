@@ -12,11 +12,14 @@ import requests
 ns = {
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
     "ds": "http://www.w3.org/2000/09/xmldsig#",
+    "ec": "http://www.w3.org/2001/10/xml-exc-c14n#",
     "psf": "http://schemas.microsoft.com/Passport/SoapServices/SOAPFault",
     "S": "http://www.w3.org/2003/05/soap-envelope",
     "saml": "urn:oasis:names:tc:SAML:1.0:assertion",
     "soap": "http://schemas.microsoft.com/sharepoint/soap/",
     "wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+    "xs": "http://www.w3.org/2001/XMLSchema",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
 }
 # Register namespaces for XML serialisation
 for alias, uri in ns.items():
@@ -207,7 +210,9 @@ class SharePointADFS(requests.auth.AuthBase):
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
-            saml_assertion = et.tostring(root.find(".//saml:Assertion", ns), encoding='unicode')
+            assertion = root.find(".//saml:Assertion", ns)
+            assertion.set("xs", ns["xs"])  # Add namespace for assertion values
+            saml_assertion = et.tostring(assertion, encoding='unicode')
         except (AttributeError, et.ParseError):
             print("Error getting security token")
             return
@@ -273,8 +278,8 @@ class SharePointADFS(requests.auth.AuthBase):
             # Parse digest text and timeout from XML
             try:
                 root = et.fromstring(response.text)
-                self.digext = root.find(".//soap:DigestValue", ns).text
-                timeout = root.find(".//soap:TimeoutSeconds", ns).text
+                self.digest = root.find(".//soap:DigestValue", ns).text
+                timeout = int(root.find(".//soap:TimeoutSeconds", ns).text)
             except (AttributeError, et.ParseError):
                 print("Digest request failed")
                 return
