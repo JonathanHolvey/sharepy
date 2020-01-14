@@ -9,7 +9,6 @@ import requests
 
 from . import errors
 
-
 # XML namespace URIs
 ns = {
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
@@ -86,7 +85,6 @@ class SharePointOnline(requests.auth.AuthBase):
                            site=self.site)
 
         # Request security token from Microsoft Online
-        print("Requesting security token...\r", end="")
         response = requests.post(self.auth_url, data=saml)
         # Parse and extract token from returned XML
         try:
@@ -105,7 +103,6 @@ class SharePointOnline(requests.auth.AuthBase):
 
     def _get_cookie(self, token):
         """Request access cookie from sharepoint site"""
-        print("Requesting access cookie... \r", end="")
         response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
                                  data=token, headers={"Host": self.site})
 
@@ -115,7 +112,6 @@ class SharePointOnline(requests.auth.AuthBase):
         response = requests.get("https://" + self.site + "/_api/web", headers={"Cookie": cookie})
 
         if response.status_code == requests.codes.ok:
-            print("Authentication successful   ")
             self.cookie = cookie
             return True
         else:
@@ -196,7 +192,6 @@ class SharePointADFS(requests.auth.AuthBase):
                            expires=expires.isoformat() + "Z")
 
         # Request security token from Microsoft Online
-        print("Requesting security token...\r", end="")
         response = requests.post(self.auth_url, data=saml, headers=headers)
         # Parse and extract token from returned XML
         try:
@@ -237,11 +232,8 @@ class SharePointADFS(requests.auth.AuthBase):
         response = requests.get(url=SPO_IDCRL_URL, headers=headers)
 
         if response.status_code == requests.codes.ok:
-            print("ADFS Authentication successful")
-
             # Add the SPOIDCRL cookie to the session
             self.cookie = self._buildcookie(response.cookies)
-
             return True
         else:
             raise errors.AuthError("ADFS Authentication failed")

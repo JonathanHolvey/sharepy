@@ -18,7 +18,6 @@ def load(filename="sp-session.pkl"):
     with open(filename, "rb") as file:
         session.__dict__.update(pickle.load(file))
     if session.auth._get_digest() or session.auth.login():
-        print("Connected to {} as {}".format(session.site, session.auth.username))
         # Re-save session to prevent it going stale
         try:
             session.save(filename)
