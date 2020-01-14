@@ -193,14 +193,19 @@ class SharePointADFS(requests.auth.AuthBase):
 
         # Request security token from Microsoft Online
         response = requests.post(self.auth_url, data=saml, headers=headers)
-        # Parse and extract token from returned XML
+        # Parse and extract assertion from returned XML
         try:
             root = et.fromstring(response.text)
-            assertion = root.find(".//saml:Assertion", ns)
-            assertion.set("xs", ns["xs"])  # Add namespace for assertion values
-            saml_assertion = et.tostring(assertion, encoding='unicode')
-        except (AttributeError, et.ParseError):
+        except et.ParseError:
             raise errors.TokenError("Token request failed. Invalid server response")
+
+        # Extract token from returned XML
+        assertion = root.find(".//saml:Assertion", ns)
+        if assertion is None or root.find(".//S:Fault", ns) is not None:
+            raise errors.TokenError("{}: {}".format(root.find(".//S:Text", ns).text,
+                                    root.find(".//psf:text", ns).text).strip().strip("."))
+        assertion.set("xs", ns["xs"])  # Add namespace for assertion values
+        saml_assertion = et.tostring(assertion, encoding='unicode')
 
         # Get the BinarySecurityToken
 
