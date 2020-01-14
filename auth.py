@@ -7,6 +7,8 @@ from uuid import uuid4
 
 import requests
 
+from . import errors
+
 
 # XML namespace URIs
 ns = {
@@ -41,8 +43,7 @@ def detect(username, password=None):
         auth_url = root.find("STSAuthURL").text
         return SharePointADFS(username=username, password=password, auth_url=auth_url)
     else:
-        print("'{}' namespace sites are not supported").format(auth_type)
-        return None
+        raise errors.AuthTypeError("'{}' namespace sites are not supported".format(auth_type))
 
 
 class SharePointOnline(requests.auth.AuthBase):
@@ -86,24 +87,19 @@ class SharePointOnline(requests.auth.AuthBase):
 
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
-        try:
-            response = requests.post(self.auth_url, data=saml)
-        except requests.exceptions.ConnectionError:
-            print("Could not connect to", self.auth_url)
-            return
+        response = requests.post(self.auth_url, data=saml)
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
         except et.ParseError:
-            print("Token request failed. The server did not send a valid response")
-            return
+            raise errors.TokenError("Token request failed. Invalid server response")
 
         # Extract token from returned XML
         token = root.find(".//wsse:BinarySecurityToken", ns)
         # Check for errors and print error messages
         if token is None or root.find(".//S:Fault", ns) is not None:
-            print("{}: {}".format(root.find(".//S:Text", ns).text,
-                                  root.find(".//psf:text", ns).text).strip().strip("."))
+            raise errors.TokenError("{}: {}".format(root.find(".//S:Text", ns).text,
+                                    root.find(".//psf:text", ns).text).strip().strip("."))
             return
         return token.text
 
@@ -123,7 +119,7 @@ class SharePointOnline(requests.auth.AuthBase):
             self.cookie = cookie
             return True
         else:
-            print("Authentication failed       ")
+            raise errors.AuthError("Authentication failed")
 
     def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
@@ -138,8 +134,7 @@ class SharePointOnline(requests.auth.AuthBase):
                 self.cookie = self._buildcookie(response.cookies)
                 timeout = int(root.find(".//d:FormDigestTimeoutSeconds", ns).text)
             except Exception:
-                print("Digest request failed")
-                return
+                raise errors.DigestError("Digest request failed")
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
 
@@ -202,11 +197,7 @@ class SharePointADFS(requests.auth.AuthBase):
 
         # Request security token from Microsoft Online
         print("Requesting security token...\r", end="")
-        try:
-            response = requests.post(self.auth_url, data=saml, headers=headers)
-        except requests.exceptions.ConnectionError:
-            print("Could not connect to", self.auth_url)
-            return
+        response = requests.post(self.auth_url, data=saml, headers=headers)
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
@@ -214,8 +205,7 @@ class SharePointADFS(requests.auth.AuthBase):
             assertion.set("xs", ns["xs"])  # Add namespace for assertion values
             saml_assertion = et.tostring(assertion, encoding='unicode')
         except (AttributeError, et.ParseError):
-            print("Error getting security token")
-            return
+            raise errors.TokenError("Token request failed. Invalid server response")
 
         # Get the BinarySecurityToken
 
@@ -233,8 +223,7 @@ class SharePointADFS(requests.auth.AuthBase):
             root = et.fromstring(response.text)
             token = root.find(".//wsse:BinarySecurityToken", ns).text
         except (AttributeError, et.ParseError):
-            print("Error getting security token")
-            return
+            raise errors.TokenError("Token request failed. Invalid server response")
 
         self.token = token
         return True
@@ -255,7 +244,7 @@ class SharePointADFS(requests.auth.AuthBase):
 
             return True
         else:
-            print("ADFS Authentication failed")
+            raise errors.AuthError("ADFS Authentication failed")
 
     def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
@@ -281,8 +270,7 @@ class SharePointADFS(requests.auth.AuthBase):
                 self.digest = root.find(".//soap:DigestValue", ns).text
                 timeout = int(root.find(".//soap:TimeoutSeconds", ns).text)
             except (AttributeError, et.ParseError):
-                print("Digest request failed")
-                return
+                raise errors.DigestError("Digest request failed")
 
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
