@@ -42,7 +42,7 @@ def detect(username, password=None):
         auth_url = root.find("STSAuthURL").text
         return SharePointADFS(username=username, password=password, auth_url=auth_url)
     else:
-        raise errors.AuthTypeError("'{}' namespace sites are not supported".format(auth_type))
+        raise errors.AuthError("'{}' namespace sites are not supported".format(auth_type))
 
 
 class SharePointOnline(requests.auth.AuthBase):
@@ -90,14 +90,14 @@ class SharePointOnline(requests.auth.AuthBase):
         try:
             root = et.fromstring(response.text)
         except et.ParseError:
-            raise errors.TokenError("Token request failed. Invalid server response")
+            raise errors.AuthError("Token request failed. Invalid server response")
 
         # Extract token from returned XML
         token = root.find(".//wsse:BinarySecurityToken", ns)
         # Check for errors and print error messages
         if token is None or root.find(".//S:Fault", ns) is not None:
-            raise errors.TokenError("{}: {}".format(root.find(".//S:Text", ns).text,
-                                    root.find(".//psf:text", ns).text).strip().strip("."))
+            raise errors.AuthError("{}: {}".format(root.find(".//S:Text", ns).text,
+                                   root.find(".//psf:text", ns).text).strip().strip("."))
             return
         return token.text
 
@@ -130,7 +130,7 @@ class SharePointOnline(requests.auth.AuthBase):
                 self.cookie = self._buildcookie(response.cookies)
                 timeout = int(root.find(".//d:FormDigestTimeoutSeconds", ns).text)
             except Exception:
-                raise errors.DigestError("Digest request failed")
+                raise errors.AuthError("Digest request failed")
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
 
@@ -197,13 +197,13 @@ class SharePointADFS(requests.auth.AuthBase):
         try:
             root = et.fromstring(response.text)
         except et.ParseError:
-            raise errors.TokenError("Token request failed. Invalid server response")
+            raise errors.AuthError("Token request failed. Invalid server response")
 
         # Extract token from returned XML
         assertion = root.find(".//saml:Assertion", ns)
         if assertion is None or root.find(".//S:Fault", ns) is not None:
-            raise errors.TokenError("{}: {}".format(root.find(".//S:Text", ns).text,
-                                    root.find(".//psf:text", ns).text).strip().strip("."))
+            raise errors.AuthError("{}: {}".format(root.find(".//S:Text", ns).text,
+                                   root.find(".//psf:text", ns).text).strip().strip("."))
         assertion.set("xs", ns["xs"])  # Add namespace for assertion values
         saml_assertion = et.tostring(assertion, encoding='unicode')
 
@@ -223,7 +223,7 @@ class SharePointADFS(requests.auth.AuthBase):
             root = et.fromstring(response.text)
             token = root.find(".//wsse:BinarySecurityToken", ns).text
         except (AttributeError, et.ParseError):
-            raise errors.TokenError("Token request failed. Invalid server response")
+            raise errors.AuthError("Token request failed. Invalid server response")
 
         self.token = token
         return True
@@ -267,7 +267,7 @@ class SharePointADFS(requests.auth.AuthBase):
                 self.digest = root.find(".//soap:DigestValue", ns).text
                 timeout = int(root.find(".//soap:TimeoutSeconds", ns).text)
             except (AttributeError, et.ParseError):
-                raise errors.DigestError("Digest request failed")
+                raise errors.AuthError("Digest request failed")
 
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
