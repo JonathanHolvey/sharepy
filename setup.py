@@ -13,7 +13,7 @@ with open(path.join(DIR, "./README.md")) as f:
 
 setup(
     name="sharepy",
-    version="1.4.0",
+    version="2.0.0-beta",
     description="Simple SharePoint Online authentication for Python",
     long_description=long_description,
     long_description_content_type="text/markdown",

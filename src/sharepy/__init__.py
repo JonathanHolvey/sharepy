@@ -1,4 +1,4 @@
-__version__ = '1.4.0'
+__version__ = "2.0.0-beta"
 
 from .session import SharePointSession
 from .session import connect
