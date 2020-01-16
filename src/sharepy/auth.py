@@ -75,7 +75,7 @@ class SharePointOnline(requests.auth.AuthBase):
         """Request authentication token from Microsoft"""
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__),
-                               "saml-templates/sp-online.xml"), "r") as file:
+                               "templates/spol-token.saml"), "r") as file:
             saml = file.read()
 
         # Insert username and password into SAML request after escaping special characters
@@ -176,7 +176,7 @@ class SharePointADFS(requests.auth.AuthBase):
 
         # Load SAML request template
         with open(os.path.join(os.path.dirname(__file__),
-                               "saml-templates/sp-adfs-stsAuthAssertion.xml"), "r") as file:
+                               "templates/adfs-assertion.saml"), "r") as file:
             saml = file.read()
 
         # Define headers to request the token
@@ -213,7 +213,7 @@ class SharePointADFS(requests.auth.AuthBase):
         MSO_AUTH_URL = "https://login.microsoftonline.com/rst2.srf"
 
         with open(os.path.join(os.path.dirname(__file__),
-                  "saml-templates/sp-adfs-stsBinaryToken.xml"), "r") as file:
+                  "templates/adfs-token.saml"), "r") as file:
             saml = file.read()
         saml = saml.format(assertion=saml_assertion,
                            endpoint="sharepoint.com")
@@ -248,7 +248,7 @@ class SharePointADFS(requests.auth.AuthBase):
         if self.expire <= datetime.now():
 
             with open(os.path.join(os.path.dirname(__file__),
-                      "saml-templates/sp-updateDigest.xml"), "r") as file:
+                      "templates/adfs-digest.saml"), "r") as file:
                 digest_envelope = file.read()
 
             # Request site context info from SharePoint site
