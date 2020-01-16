@@ -3,7 +3,10 @@ import re
 import pickle
 
 import requests
+
+from . import __version__
 from . import auth
+from . import errors
 
 
 def connect(site, username=None, password=None):
@@ -17,6 +20,11 @@ def load(filename="sp-session.pkl"):
     session = SharePointSession()
     with open(filename, "rb") as file:
         session.__dict__.update(pickle.load(file))
+    # Check session version
+    if not session._check():
+        raise errors.SessionError("The session is not compatible with the current SharePy version")
+
+    # Try to authenticate the saved session
     if session.auth._get_digest() or session.auth.login():
         # Re-save session to prevent it going stale
         try:
@@ -41,6 +49,8 @@ class SharePointSession(requests.Session):
 
     def __init__(self, site=None, auth=None):
         super().__init__()
+        self.version = __version__
+
         if site is not None:
             self.site = re.sub(r"^https?://", "", site)
             self.auth = auth
@@ -69,3 +79,11 @@ class SharePointSession(requests.Session):
                 for chunk in response:
                     file.write(chunk)
         return response
+
+    def _check(self):
+        """Compare the the current major version against the stored value"""
+        try:
+            valid = self.version.split(".")[0] == __version__.split(".")[0]
+        except AttributeError:
+            return False
+        return valid

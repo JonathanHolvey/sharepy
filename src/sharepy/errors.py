@@ -17,3 +17,8 @@ class TokenError(Exception):
 class DigestError(Exception):
     def __init__(self, message):
         self.message = message
+
+
+class SessionError(Exception):
+    def __init__(self, message):
+        self.message = message
