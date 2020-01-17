@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 from os import path
-from glob import glob
 
 DIR = path.abspath(path.dirname(__file__))
 
@@ -35,6 +34,7 @@ setup(
     ],
     packages=find_packages(),
     package_dir={"": "src"},
-    package_data={"sharepy": glob(path.join(DIR, "src/sharepy/templates/*"))},
-    python_requires=">=3.5, <4"
+    package_data={"sharepy.auth": ["templates/*"]},
+    python_requires=">=3.5, <4",
+    install_requires=['requests>=2,<3']
 )
