@@ -2,17 +2,28 @@ from requests.auth import AuthBase as RequestsAuth
 
 
 class BaseAuth(RequestsAuth):
+    """A base interface that all SharePy auth classes should inherit from"""
     site = None
 
-    """A base interface that all SharePy auth classes should inherit from"""
-    def __init__(self, username, password=None):
+    def __init__(self, username, password=None, login_url=None):
         self.username = username
         self.password = password
+        self.login_url = login_url
 
     def login(self, site):
         """Perform authentication steps"""
-        raise NotImplementedError("Auth classes must allow login")
+        raise NotImplementedError("Auth classes must implement login")
 
     def refresh(self):
         """Refresh any expiring tokens or cookies"""
-        raise NotImplementedError("Auth classes must allow refresh")
+        raise NotImplementedError("Auth classes must implement refresh")
+
+    @staticmethod
+    def supports(realm):
+        """Check if the class supports the provided auth realm"""
+        raise NotImplementedError("Auth classes must implement supports")
+
+    @staticmethod
+    def get_login(realm):
+        """Get the login URL from the realm XML"""
+        raise NotImplementedError("Auth classes must implement get_login")

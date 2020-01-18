@@ -11,7 +11,7 @@ from .. import errors
 
 
 class SharePointOnline(BaseAuth):
-    auth_domain = "login.microsoftonline.com"
+    """Authenticate via SharePoint Online"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,8 +51,7 @@ class SharePointOnline(BaseAuth):
                            site=self.site)
 
         # Request security token from Microsoft Online
-        auth_url = "https://{}/extSTS.srf".format(self.auth_domain)
-        response = requests.post(auth_url, data=saml)
+        response = requests.post(self.login_url, data=saml)
         # Parse and extract token from returned XML
         try:
             root = et.fromstring(response.text)
@@ -104,3 +103,14 @@ class SharePointOnline(BaseAuth):
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""
         return "rtFa=" + cookies["rtFa"] + "; FedAuth=" + cookies["FedAuth"]
+
+    @staticmethod
+    def supports(realm):
+        """Check for managed namespace"""
+        return realm.find("NameSpaceType").text == "Managed"
+
+    @staticmethod
+    def get_login(realm):
+        """Get the login domain from the realm XML"""
+        domain = realm.find("CloudInstanceName").text
+        return "https://login.{}/extSTS.srf".format(domain)
