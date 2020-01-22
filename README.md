@@ -94,7 +94,7 @@ import sharepy
 
 auth = sharepy.auth.SharePointOnline(username="user@example.com")
 auth.login_url = "https://login.microsoftonline.de/extSES.srf"
-s = sharepy.connect("example.sharepoint.com", auth)
+s = sharepy.SharePointSession("example.sharepoint.com", auth)
 ```
 
 ## Useful reading
