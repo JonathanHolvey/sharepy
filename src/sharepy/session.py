@@ -25,7 +25,7 @@ def load(filename="sp-session.pkl"):
         raise errors.SessionError("The session is not compatible with the current SharePy version")
 
     # Try to authenticate the saved session
-    if session.auth._get_digest() or session.auth.login():
+    if session.auth.refresh() or session.auth.login():
         # Re-save session to prevent it going stale
         try:
             session.save(filename)

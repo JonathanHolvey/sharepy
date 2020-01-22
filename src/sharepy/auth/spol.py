@@ -28,7 +28,7 @@ class SharePointOnline(BaseAuth):
         self._get_digest()
 
     def refresh(self):
-        self._get_digest()
+        return self._get_digest()
 
     def __call__(self, request):
         """Inject cookies into requests as they are made"""
