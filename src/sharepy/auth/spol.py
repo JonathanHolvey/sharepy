@@ -1,4 +1,3 @@
-import os
 from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
@@ -8,6 +7,7 @@ import requests
 
 from .base import BaseAuth
 from .xml import namespaces as ns
+from . import templates
 from .. import errors
 
 
@@ -39,17 +39,11 @@ class SharePointOnline(BaseAuth):
         return request
 
     def _get_token(self):
-        """Request authentication token from Microsoft"""
-        # Load SAML request template
-        with open(os.path.join(os.path.dirname(__file__),
-                               "templates/spol-token.saml"), "r") as file:
-            saml = file.read()
-
         # Insert username and password into SAML request after escaping special characters
         password = self.password or getpass("Enter your password: ")
-        saml = saml.format(username=escape(self.username),
-                           password=escape(password),
-                           site=self.site)
+        saml = templates.load("spol-token.saml").format(username=escape(self.username),
+                                                        password=escape(password),
+                                                        site=self.site)
 
         # Request security token from Microsoft Online
         response = requests.post(self.login_url, data=saml)

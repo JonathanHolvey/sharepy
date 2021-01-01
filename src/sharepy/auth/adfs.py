@@ -1,4 +1,3 @@
-import os
 from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
@@ -9,6 +8,7 @@ import requests
 
 from .base import BaseAuth
 from .xml import namespaces as ns
+from . import templates
 from .. import errors
 
 MSO_AUTH_URL = "https://login.microsoftonline.com/rst2.srf"
@@ -46,22 +46,17 @@ class SharePointADFS(BaseAuth):
         expires = created + timedelta(minutes=10)
         message_id = str(uuid4())
 
-        # Load SAML request template
-        with open(os.path.join(os.path.dirname(__file__),
-                               "templates/adfs-assertion.saml"), "r") as file:
-            saml = file.read()
-
         # Define headers to request the token
         headers = {"Content-Type": "application/soap+xml; charset=utf-8"}
 
         # Insert variables into SAML request
         password = self.password or getpass("Enter your password: ")
-        saml = saml.format(username=escape(self.username),
-                           password=escape(password),
-                           login_url=self.login_url,
-                           message_id=message_id,
-                           created=created.isoformat() + "Z",
-                           expires=expires.isoformat() + "Z")
+        saml = templates.load("adfs-assertion.saml").format(username=escape(self.username),
+                                                            password=escape(password),
+                                                            login_url=self.login_url,
+                                                            message_id=message_id,
+                                                            created=created.isoformat() + "Z",
+                                                            expires=expires.isoformat() + "Z")
 
         # Request security token from Microsoft Online
         response = requests.post(self.login_url, data=saml, headers=headers)
@@ -80,11 +75,8 @@ class SharePointADFS(BaseAuth):
         saml_assertion = et.tostring(assertion, encoding='unicode')
 
         # Get the BinarySecurityToken
-        with open(os.path.join(os.path.dirname(__file__),
-                  "templates/adfs-token.saml"), "r") as file:
-            saml = file.read()
-        saml = saml.format(assertion=saml_assertion,
-                           endpoint="sharepoint.com")
+        saml = templates.load("adfs-token.saml").format(assertion=saml_assertion,
+                                                        endpoint="sharepoint.com")
         response = requests.post(url=MSO_AUTH_URL, data=saml, headers=headers)
         # Parse and extract token from returned XML
         try:
@@ -113,11 +105,6 @@ class SharePointADFS(BaseAuth):
     def _get_digest(self):
         """Check and refresh sites cookie and request digest"""
         if self.expire <= datetime.now():
-
-            with open(os.path.join(os.path.dirname(__file__),
-                      "templates/adfs-digest.saml"), "r") as file:
-                digest_envelope = file.read()
-
             # Request site context info from SharePoint site
             request_url = f"https://{self.site}/_vti_bin/sites.asmx"
             headers = ({"SOAPAction": "http://schemas.microsoft.com/"
@@ -126,6 +113,7 @@ class SharePointADFS(BaseAuth):
                         "Content-Type": "text/xml;charset=utf-8",
                         "Cookie": self.cookie,
                         "X-RequestForceAuthentication": "true"})
+            digest_envelope = templates.load("adfs-digest.saml")
             response = requests.post(request_url, data=digest_envelope, headers=headers)
 
             # Parse digest text and timeout from XML
