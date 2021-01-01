@@ -2,11 +2,12 @@ import os
 from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
+import xml.etree.ElementTree as et
 
 import requests
 
 from .base import BaseAuth
-from .xml import ns, ElementTree as et
+from .xml import namespaces as ns
 from .. import errors
 
 
@@ -62,8 +63,8 @@ class SharePointOnline(BaseAuth):
         token = root.find(".//wsse:BinarySecurityToken", ns)
         # Check for errors and print error messages
         if token is None or root.find(".//S:Fault", ns) is not None:
-            error_type = root.find(".//S:Text").text
-            error_message = root.find(".//psf:text").text
+            error_type = root.find(".//S:Text", ns).text
+            error_message = root.find(".//psf:text", ns).text
             raise errors.AuthError(f"{error_type}: {error_message}".strip("."))
 
         self.token = token.text

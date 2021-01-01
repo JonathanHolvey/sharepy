@@ -2,12 +2,13 @@ import os
 from getpass import getpass
 from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
+import xml.etree.ElementTree as et
 from uuid import uuid4
 
 import requests
 
 from .base import BaseAuth
-from .xml import ns, ElementTree as et
+from .xml import namespaces as ns
 from .. import errors
 
 MSO_AUTH_URL = "https://login.microsoftonline.com/rst2.srf"

@@ -1,6 +1,4 @@
-from xml.etree import ElementTree
-
-ns = {
+namespaces = {
     "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
     "ds": "http://www.w3.org/2000/09/xmldsig#",
     "ec": "http://www.w3.org/2001/10/xml-exc-c14n#",
@@ -12,6 +10,3 @@ ns = {
     "xs": "http://www.w3.org/2001/XMLSchema",
     "xsi": "http://www.w3.org/2001/XMLSchema-instance",
 }
-
-for alias, uri in ns.items():
-    ElementTree.register_namespace(alias, uri)
