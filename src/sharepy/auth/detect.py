@@ -28,4 +28,4 @@ def detect(username, password=None):
         return _class(username, password, login_url=login_url)
 
     auth_type = realm.find("NameSpaceType").text
-    raise errors.AuthError("'{}' namespace sites are not supported".format(auth_type))
+    raise errors.AuthError(f"'{auth_type}' namespace sites are not supported")

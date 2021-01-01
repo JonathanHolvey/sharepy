@@ -96,7 +96,7 @@ class SharePointADFS(BaseAuth):
         return True
 
     def _get_cookie(self):
-        idcrl_url = "https://" + self.site + "/_vti_bin/idcrl.svc/"
+        idcrl_url = f"https://{self.site}/_vti_bin/idcrl.svc/"
         headers = {"Authorization": "BPOSIDCRL " + self.token,
                    "X-IDCRL_ACCEPTED": "t",
                    "User-Agent": ""}
@@ -118,14 +118,14 @@ class SharePointADFS(BaseAuth):
                 digest_envelope = file.read()
 
             # Request site context info from SharePoint site
-            requestUrl = "https://" + self.site + "/_vti_bin/sites.asmx"
+            request_url = f"https://{self.site}/_vti_bin/sites.asmx"
             headers = ({"SOAPAction": "http://schemas.microsoft.com/"
                        "sharepoint/soap/GetUpdatedFormDigestInformation",
                         "Host": self.site,
                         "Content-Type": "text/xml;charset=utf-8",
                         "Cookie": self.cookie,
                         "X-RequestForceAuthentication": "true"})
-            response = requests.post(requestUrl, data=digest_envelope, headers=headers)
+            response = requests.post(request_url, data=digest_envelope, headers=headers)
 
             # Parse digest text and timeout from XML
             try:

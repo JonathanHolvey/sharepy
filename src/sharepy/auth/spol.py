@@ -62,19 +62,22 @@ class SharePointOnline(BaseAuth):
         token = root.find(".//wsse:BinarySecurityToken", ns)
         # Check for errors and print error messages
         if token is None or root.find(".//S:Fault", ns) is not None:
-            raise errors.AuthError("{}: {}".format(root.find(".//S:Text").text,
-                                   root.find(".//psf:text").text).strip().strip("."))
+            error_type = root.find(".//S:Text").text
+            error_message = root.find(".//psf:text").text
+            raise errors.AuthError(f"{error_type}: {error_message}".strip("."))
+
         self.token = token.text
 
     def _get_cookie(self):
         """Request access cookie from sharepoint site"""
-        response = requests.post("https://" + self.site + "/_forms/default.aspx?wa=wsignin1.0",
-                                 data=self.token, headers={"Host": self.site})
+        cookie_url = f"https://{self.site}/_forms/default.aspx?wa=wsignin1.0"
+        response = requests.post(cookie_url, data=self.token, headers={"Host": self.site})
 
         # Create access cookie from returned headers
         cookie = self._buildcookie(response.cookies)
         # Verify access by requesting page
-        response = requests.get("https://" + self.site + "/_api/web", headers={"Cookie": cookie})
+        test_url = f"https://{self.site}/_api/web"
+        response = requests.get(test_url, headers={"Cookie": cookie})
 
         if response.status_code == requests.codes.ok:
             self.cookie = cookie
@@ -85,8 +88,8 @@ class SharePointOnline(BaseAuth):
         """Check and refresh sites cookie and request digest"""
         if self.expire <= datetime.now():
             # Request site context info from SharePoint site
-            response = requests.post("https://" + self.site + "/_api/contextinfo",
-                                     data="", headers={"Cookie": self.cookie})
+            digest_url = f"https://{self.site}/_api/contextinfo"
+            response = requests.post(digest_url, data="", headers={"Cookie": self.cookie})
             # Parse digest text and timeout from XML
             try:
                 root = et.fromstring(response.text)
@@ -113,4 +116,4 @@ class SharePointOnline(BaseAuth):
     def get_login(realm):
         """Get the login domain from the realm XML"""
         domain = realm.find("CloudInstanceName").text
-        return "https://login.{}/extSTS.srf".format(domain)
+        return f"https://login.{domain}/extSTS.srf"
