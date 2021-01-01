@@ -18,8 +18,6 @@ class SharePointOnline(BaseAuth):
         super().__init__(*args, **kwargs)
         self.expire = datetime.now()
         self.token = None
-        self.cookie = None
-        self.digest = None
 
     def login(self, site):
         """Perform authentication steps"""
@@ -30,13 +28,6 @@ class SharePointOnline(BaseAuth):
 
     def refresh(self):
         return self._get_digest()
-
-    def __call__(self, request):
-        """Inject cookies into requests as they are made"""
-        if self.cookie and self.digest:
-            request.headers.update({"Content-Type": "text/xml; charset=utf-8",
-                                    "Cookie": self.cookie})
-        return request
 
     def _get_token(self):
         # Insert username and password into SAML request after escaping special characters
