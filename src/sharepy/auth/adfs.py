@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from xml.sax.saxutils import escape
 import xml.etree.ElementTree as et
 from uuid import uuid4
+import re
 
 import requests
 
@@ -57,16 +58,15 @@ class SharePointADFS(BaseAuth):
         except et.ParseError:
             raise errors.AuthError('Token request failed. Invalid server response')
 
-        # Extract token from returned XML
-        assertion = root.find('.//saml:Assertion', ns)
-        if assertion is None or root.find('.//S:Fault', ns) is not None:
+        # Check response contains SAML assertion
+        if root.find('.//saml:Assertion', ns) is None or root.find('.//S:Fault', ns) is not None:
             raise errors.AuthError.fromxml(root)
+        # The assertion element must be used verbatim and cannot be parsed
+        assertion = re.search('<saml:Assertion.+</saml:Assertion>',
+                              response.text,
+                              flags=re.DOTALL).group(0)
 
-        assertion.set('xs', ns['xs'])  # Add namespace for assertion values
-        saml_assertion = et.tostring(assertion, encoding='unicode')
-
-        # Get the BinarySecurityToken
-        saml = templates.load('adfs-token.saml').format(assertion=saml_assertion,
+        saml = templates.load('adfs-token.saml').format(assertion=assertion,
                                                         endpoint='sharepoint.com')
         response = requests.post(url=MSO_AUTH_URL, data=saml, headers=headers)
         # Parse and extract token from returned XML
