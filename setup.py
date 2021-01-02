@@ -30,11 +30,10 @@ setup(
         "Topic :: Internet",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 2.7"
     ],
     packages=find_packages(),
     package_dir={"": "src"},
     package_data={"sharepy.auth": ["templates/*"]},
-    python_requires=">=3.5, <4",
+    python_requires=">=3.6, <4",
     install_requires=['requests>=2,<3']
 )
