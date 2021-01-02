@@ -60,6 +60,7 @@ class SharePointADFS(BaseAuth):
         # Extract token from returned XML
         assertion = root.find('.//saml:Assertion', ns)
         if assertion is None or root.find('.//S:Fault', ns) is not None:
+            print(response.text)
             raise errors.AuthError.fromxml(root)
 
         assertion.set('xs', ns['xs'])  # Add namespace for assertion values
