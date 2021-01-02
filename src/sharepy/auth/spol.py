@@ -46,7 +46,6 @@ class SharePointOnline(BaseAuth):
 
         # Extract token from returned XML
         token = root.find('.//wsse:BinarySecurityToken', ns)
-        # Check for errors and print error messages
         if token is None or root.find('.//S:Fault', ns) is not None:
             raise errors.AuthError.fromxml(root)
 
