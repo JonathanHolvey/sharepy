@@ -12,7 +12,7 @@ with open(path.join(DIR, './README.md')) as f:
 
 setup(
     name='sharepy',
-    version='2.0.0-beta.1',
+    version='2.0.0-beta.1-2',
     description='Simple SharePoint Online authentication for Python',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -31,9 +31,9 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3',
     ],
-    packages=find_packages(),
-    package_dir={'': 'src'},
-    package_data={'sharepy.auth': ['templates/*']},
+    packages=find_packages('./src'),
+    package_dir={'': './src'},
+    package_data={'sharepy.auth.templates': ['*']},
     python_requires='>=3.6, <4',
     install_requires=['requests>=2,<3']
 )
