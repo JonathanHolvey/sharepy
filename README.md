@@ -10,7 +10,7 @@ SharePy can be installed from the Python Package Index, PyPI.
 pip install sharepy
 ```
 
-## Initiate a SharePoint session:
+## Initiating a SharePoint session
 
 ```python
 import sharepy
@@ -21,9 +21,7 @@ You will be prompted to enter your username and password, which are used to requ
 
 A username and password can also be provided as arguments of the `connect` function, if prompts are not desirable.
 
-The default authentication URL is `login.microsoftonline.com`. If another top level domain is required for a region-specific account, it can be specified using the `auth_tld` argument.
-
-## Make an API call:
+## Making API calls
 
 ```python
 r = s.get("https://example.sharepoint.com/_api/web/lists/GetByTitle('Test Library')")
@@ -37,9 +35,9 @@ Headers can be added or overridden by supplying a dictionary to the relevant met
 r = s.get("https://example.sharepoint.com/_api/...", headers={"Accept": "application/atom+xml"})
 ```
 
-Currently only the `post()` method will send a digest header, allowing modifications to be made to SharePoint objects.
+The request will send a digest header, allowing modifications to be made to SharePoint objects.
 
-## Download a file:
+### Downloading a file
 
 ```python
 r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf")
@@ -51,19 +49,53 @@ This will download the file to the current directory and return a `response` obj
 r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf", filename="downloads/file.pdf")
 ```
 
-## Save and reload your authenticated session
+## Saving an authenticated session
 
-Properties of the authentication session can be saved to a file using the `save()` method, so the same cookies can be reused multiple times. Later, the `load()` function can be used to restore the session:
+Properties of the authentication session can be saved to a file using the `save` method, so the session can be used without having to re-authenticate each time a program is run:
 
 ```python
 s.save()
 ```
+
+Later, the `load` function can be used to restore the session:
 
 ```python
 s = sharepy.load()
 ```
 
 The default file name for saving and loading sessions is `sp-session.pkl`, however an alternative location can be provided as an argument to `save()` and `load()`.
+
+## Advanced usage
+
+### Requests authentication
+
+SharePy implements Requests authentication classes that can also be used directly with Requests itself:
+
+```python
+import requests
+import sharepy
+
+auth = sharepy.auth.SharePointOnline(username="user@example.com")
+auth.login(site="example.sharepoint.com")
+r = requests.get("https://example.sharepoint.com", auth=auth)
+```
+
+Available authentication classes are:
+
+- `SharepointOnline` - For normal SharePoint Online sites
+- `SharepointADFS` - For ADFS-enabled sites
+
+### Custom authentication URL
+
+The authentication URL is detected automatically when using `sharepy.connect()`. If a different URL is required for a region-specific account, it can be specified by manually creating an auth object and setting its `login_url` property:
+
+```python
+import sharepy
+
+auth = sharepy.auth.SharePointOnline(username="user@example.com")
+auth.login_url = "https://login.microsoftonline.de/extSES.srf"
+s = sharepy.SharePointSession("example.sharepoint.com", auth)
+```
 
 ## Useful reading
 
@@ -78,3 +110,4 @@ This software is distributed under the GNU General Public License v3. Copyright 
 
 1. The authentication method used here is based on [this post](https://allthatjs.com/2012/03/28/remote-authentication-in-sharepoint-online/) by Luc Stakenborg.
 2. Additional help regarding request digests from sadegh's comment on [this post](http://paulryan.com.au/2014/spo-remote-authentication-rest/) by Paul Ryan.
+3. Contributed code from @joemeneses for ADFS authentication.
