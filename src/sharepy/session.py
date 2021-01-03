@@ -18,6 +18,7 @@ def connect(site, username=None, password=None):
 def load(filename='sp-session.pkl'):
     """Load and return saved session object"""
     session = SharePointSession()
+    session.version = None
     with open(filename, 'rb') as file:
         session.__dict__.update(pickle.load(file))
     # Check session version
