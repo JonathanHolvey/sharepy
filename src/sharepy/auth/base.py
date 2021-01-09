@@ -16,7 +16,7 @@ class BaseAuth(RequestsAuth):
         """Inject auth cookies into requests"""
         if self.cookie and self.digest:
             request.headers.update({'Cookie': self.cookie,
-                                    'X-RequestDigest': self.digest})
+                                    'Authorization': f'Bearer {self.digest}'})
         return request
 
     def login(self, site):
