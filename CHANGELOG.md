@@ -1,6 +1,8 @@
 # SharePy changelog
 
-## v2.0.0 - January 2021
+## v2.0.0 - 5 February 2022
+
+Previously released as v2.0.0-beta.1 in January 2021.
 
 A major refactor of SharePy to provide a standard [Requests auth](https://requests.readthedocs.io/en/master/user/authentication/#new-forms-of-authentication) interface.
 

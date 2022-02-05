@@ -12,7 +12,7 @@ with open(path.join(DIR, './README.md')) as f:
 
 setup(
     name='sharepy',
-    version='2.0.0-beta.1-2',
+    version='2.0.0',
     description='Simple SharePoint Online authentication for Python',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -25,7 +25,7 @@ setup(
     },
     license='GPLv3',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: Internet',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

@@ -104,7 +104,7 @@ s = sharepy.SharePointSession("example.sharepoint.com", auth)
 
 ## Licence
 
-This software is distributed under the GNU General Public License v3. Copyright 2016-2018 Jonathan Holvey.
+This software is distributed under the GNU General Public License v3. Copyright 2016-2021 Jonathan Holvey.
 
 ## Credits
 
