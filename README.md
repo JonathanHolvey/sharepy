@@ -49,6 +49,20 @@ This will download the file to the current directory and return a `response` obj
 r = s.getfile("https://example.sharepoint.com/Library/Test%20File.pdf", filename="downloads/file.pdf")
 ```
 
+### Uploading a file
+
+Successfully uploading a file to SharePoint is a complex task which is described in detail in [issue #4](https://github.com/JonathanHolvey/sharepy/issues/4).
+
+The actual file upload can be achieved with the following code, where `filepath` is the path to the file to upload, `folder` is the library on the SharePoint server and `filename` is the name to give to the file on upload.
+
+```python
+with open(filepath, "rb") as f:
+    data = f.read()
+
+url = "https://example.sharepoint.com/GetFolderByServerRelativeUrl('{}')/Files/add(url='{}',overwrite=true)"
+r = s.post(url.format(folder, filename), data=data, headers={"content-length": len(data)})
+```
+
 ## Saving an authenticated session
 
 Properties of the authentication session can be saved to a file using the `save` method, so the session can be used without having to re-authenticate each time a program is run:
