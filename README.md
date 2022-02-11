@@ -59,7 +59,7 @@ The actual file upload can be achieved with the following code, where `filepath`
 with open(filepath, "rb") as f:
     data = f.read()
 
-url = "https://example.sharepoint.com/GetFolderByServerRelativeUrl('{}')/Files/add(url='{}',overwrite=true)"
+url = "https://example.sharepoint.com/_api/web/GetFolderByServerRelativeUrl('{}')/Files/add(url='{}',overwrite=true)"
 r = s.post(url.format(folder, filename), data=data, headers={"content-length": len(data)})
 ```
 
