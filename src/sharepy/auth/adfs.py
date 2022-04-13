@@ -24,9 +24,10 @@ class SharePointADFS(BaseAuth):
     def login(self, site):
         """Perform authentication steps"""
         self.site = site
-        self._get_token()
-        self._get_cookie()
-        self._get_digest()
+        got_token = self._get_token()
+        got_cookie = self._get_cookie()
+        refreshed = self._get_digest()
+        return all([got_token, got_cookie, refreshed])
 
     def refresh(self):
         return self._get_digest()
@@ -117,6 +118,8 @@ class SharePointADFS(BaseAuth):
 
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
+
+        return True
 
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""

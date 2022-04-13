@@ -7,6 +7,7 @@ import requests
 from . import __version__
 from . import auth
 from . import errors
+from sharepy.auth.base import BaseAuth
 
 
 def connect(site, username=None, password=None):
@@ -25,7 +26,7 @@ def load(filename='sp-session.pkl'):
         raise errors.SessionError('The session is not compatible with the current SharePy version')
 
     # Try to authenticate the saved session
-    if session.auth.refresh() or session.auth.login():
+    if session.auth.refresh() or session.auth.login(session.site):
         # Re-save session to prevent it going stale
         try:
             session.save(filename)
@@ -47,7 +48,7 @@ class SharePointSession(requests.Session):
       <Response [200]>
     """
 
-    def __init__(self, site=None, auth=None):
+    def __init__(self, site=None, auth: BaseAuth = None):
         super().__init__()
         self.version = __version__
 
