@@ -22,9 +22,10 @@ class SharePointOnline(BaseAuth):
     def login(self, site):
         """Perform authentication steps"""
         self.site = site
-        self._get_token()
-        self._get_cookie()
-        self._get_digest()
+        got_token = self._get_token()
+        got_cookie = self._get_cookie()
+        refreshed = self._get_digest()
+        return all([got_token, got_cookie, refreshed])
 
     def refresh(self):
         return self._get_digest()
@@ -50,6 +51,7 @@ class SharePointOnline(BaseAuth):
             raise errors.AuthError.fromxml(root)
 
         self.token = token.text
+        return True
 
     def _get_cookie(self):
         """Request access cookie from sharepoint site"""
@@ -64,6 +66,7 @@ class SharePointOnline(BaseAuth):
 
         if response.status_code == requests.codes.ok:
             self.cookie = cookie
+            return True
         else:
             raise errors.AuthError('Authentication failed')
 
@@ -84,7 +87,9 @@ class SharePointOnline(BaseAuth):
             # Calculate digest expiry time
             self.expire = datetime.now() + timedelta(seconds=timeout)
 
-        return True
+            return True
+
+        return False
 
     def _buildcookie(self, cookies):
         """Create session cookie from response cookie dictionary"""
