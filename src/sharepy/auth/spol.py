@@ -1,5 +1,6 @@
 from getpass import getpass
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from xml.sax.saxutils import escape
 import xml.etree.ElementTree as et
 
@@ -21,7 +22,15 @@ class SharePointOnline(BaseAuth):
 
     def login(self, site):
         """Perform authentication steps"""
-        self.site = site
+        # Having to add a scheme here as it's pre-removed but needed to force urllib to
+        #  do the right thing.
+        parsed_site = urlparse("https://" + site)
+        self.fqdn = parsed_site.netloc
+        self.site_path = ""
+        if parsed_site.path:
+            self.site_path = parsed_site.path
+            if not self.site_path.endswith("/"):
+                self.site_path += "/"
         self._get_token()
         self._get_cookie()
         self._get_digest()
@@ -34,7 +43,7 @@ class SharePointOnline(BaseAuth):
         password = self.password or getpass('Enter your password: ')
         saml = templates.load('spol-token.saml').format(username=escape(self.username),
                                                         password=escape(password),
-                                                        site=self.site)
+                                                        site=self.fqdn)
 
         # Request security token from Microsoft Online
         response = requests.post(self.login_url, data=saml)
@@ -53,13 +62,13 @@ class SharePointOnline(BaseAuth):
 
     def _get_cookie(self):
         """Request access cookie from sharepoint site"""
-        cookie_url = f'https://{self.site}/_forms/default.aspx?wa=wsignin1.0'
-        response = requests.post(cookie_url, data=self.token, headers={'Host': self.site})
+        cookie_url = f'https://{self.fqdn}/_forms/default.aspx?wa=wsignin1.0'
+        response = requests.post(cookie_url, data=self.token, headers={'Host': self.fqdn})
 
         # Create access cookie from returned headers
         cookie = self._buildcookie(response.cookies)
         # Verify access by requesting page
-        test_url = f'https://{self.site}/_api/web'
+        test_url = f'https://{self.fqdn}/_api/web'
         response = requests.get(test_url, headers={'Cookie': cookie})
 
         if response.status_code == requests.codes.ok:
@@ -71,7 +80,7 @@ class SharePointOnline(BaseAuth):
         """Check and refresh sites cookie and request digest"""
         if self.expire <= datetime.now():
             # Request site context info from SharePoint site
-            digest_url = f'https://{self.site}/_api/contextinfo'
+            digest_url = f'https://{self.fqdn}{self.site_path}_api/contextinfo'
             response = requests.post(digest_url, data='', headers={'Cookie': self.cookie})
             # Parse digest text and timeout from XML
             try:
